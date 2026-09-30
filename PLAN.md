@@ -48,8 +48,8 @@ Decisiones cerradas:
 | F1 Repo | `.gitignore` con `.streamlit/secrets.toml` antes del primer commit; `pyproject.toml` + `uv.lock` y `requirements.txt` exportado; `secrets.toml` local | Repo creado sin secretos versionados | ✅ |
 | F2 App base | `app.py` en local: métricas, lista En curso y aviso WIP | `streamlit run app.py` muestra la hoja real | ✅ |
 | F3 Extras v1 | Filtros, No empezados, Pausados, Últimos finalizados, desglose, detalle por ítem | Los bloques responden a los filtros | ✅ (PR #1 y #2) |
-| F4 Despliegue | Community Cloud privado; Secrets pegados | URL privada funcionando | Pendiente |
-| F5 iPad | Acceso directo en pantalla de inicio; login Google | Tras editar la hoja, el botón "Actualizar" muestra el cambio al instante | Pendiente |
+| F4 Despliegue | Community Cloud privado; Secrets pegados | URL privada funcionando | ✅ |
+| F5 iPad | Acceso directo en pantalla de inicio; login Google | Tras editar la hoja, el botón "Actualizar" muestra el cambio al instante | ✅ |
 | F6 Uso | 2 semanas de uso; ideas nuevas como filas en la hoja | Revisión de qué sobra o falta | Pendiente |
 
 Después: skill `seguimiento` para actualizar la hoja desde cualquier chat y tarea semanal de lo parado.
@@ -71,11 +71,8 @@ Después: skill `seguimiento` para actualizar la hoja desde cualquier chat y tar
 
 ## 7. Siguiente paso
 
-F0 y F1 están completas. Queda, en orden:
-- [ ] Ver la app en el navegador (`uv run streamlit run app.py`) y ajustar lo visual, sobre todo en el iPad.
-- [ ] F4: desplegar en Streamlit Community Cloud (privado) y pegar el contenido de `secrets.toml` en los Secrets de la app.
-- [ ] F5: abrir la URL en el iPad, añadirla a la pantalla de inicio y entrar con Google.
-- [ ] F6: usarla dos semanas antes de añadir funciones.
+F0 a F5 están completas: la app está desplegada, es privada, tiene acceso directo en el iPad nuevo y el botón "Actualizar" trae los cambios de la hoja. Queda:
+- [ ] F6: usarla dos semanas (hasta mediados de octubre de 2026) antes de añadir funciones; las ideas nuevas se apuntan como filas en la hoja.
 
 ## 8. Tareas que se derivan
 

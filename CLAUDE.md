@@ -89,11 +89,12 @@ Hecho:
 - [x] `app.py` v1 escrita (capa `datos/`, capa `vistas/`, 27 tests) y comprobada de forma automática contra la hoja real.
 - [x] v1 fusionada en `main` (PR #1) y rama `feat/dashboard-v1` borrada.
 - [x] Bloque No empezados y métrica En curso solo con lo empezado, fusionados en `main` (PR #2).
+- [x] Vista comprobada en el navegador del PC y en el iPad nuevo (local y desplegada).
+- [x] iPad nuevo: acceso directo en la pantalla de inicio y botón "Actualizar" comprobado con un cambio en la hoja.
+- [x] Desplegada en Streamlit Community Cloud como app privada (acceso por invitación de email, con el Gmail personal). La URL no se guarda en el repo porque es público.
 
 Pendiente:
-- [ ] Ver la app en el navegador (`uv run streamlit run app.py`) y ajustar lo visual, sobre todo en el iPad.
-- [ ] Despliegue en Streamlit Community Cloud; pegar el contenido de `secrets.toml` en los Secrets de la app.
-- [ ] iPad: abrir la URL (acceso directo en la pantalla de inicio), login con Google (la app es privada). El iPad se bloquea solo tras ~1 h; no hace falta pantalla siempre encendida.
+- [ ] Dos semanas de uso (hasta mediados de octubre de 2026) sin añadir funciones. El iPad se bloquea solo tras ~1 h; no hace falta pantalla siempre encendida.
 - [ ] Más adelante: mini-skill `seguimiento` para que cualquier chat de Claude actualice la hoja con las mismas reglas.
 - [ ] Opcional: tarea programada semanal que revise lo parado.
 
