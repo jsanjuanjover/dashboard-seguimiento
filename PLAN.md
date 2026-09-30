@@ -8,7 +8,7 @@ Hacer visible, de un vistazo y en el iPad, lo que el problema de fondo esconde: 
 - Empezados frente a terminados este año y este mes.
 - Lo que lleva más de 21 días sin tocarse.
 
-Uso: lectura y filtrado táctil. La edición se hace en Google Sheets o desde Claude. Se actualiza solo (sondeo de 1 min).
+Uso: lectura y filtrado táctil. La edición se hace en Google Sheets o desde Claude. Se actualiza solo cada 1 h y con un botón "Actualizar" para forzarlo.
 
 Decisiones cerradas:
 
@@ -19,7 +19,7 @@ Decisiones cerradas:
 | Bloqueo del iPad | automático a ~1 h (no siempre encendido) |
 | Tema | automático (sigue el del sistema) |
 | Privacidad | app privada en Community Cloud |
-| Parado | 21 días fijos; sin `ult_act` se muestra "—", sin alerta |
+| Parado | 21 días fijos; sin `ult_act` se muestra "sin fecha", sin alerta |
 | Alcance v1 | incluye filtros, Pausados, Últimos finalizados y desglose |
 
 ## 2. Pantalla (v1)
@@ -47,7 +47,7 @@ Decisiones cerradas:
 | F2 App base | `app.py` en local: métricas, lista En curso y aviso WIP | `streamlit run app.py` muestra la hoja real |
 | F3 Extras v1 | Filtros, Pausados, Últimos finalizados, desglose | Los bloques responden a los filtros |
 | F4 Despliegue | Community Cloud privado; Secrets pegados | URL privada funcionando |
-| F5 iPad | Acceso directo en pantalla de inicio; login Google | Un cambio en la hoja llega en 1–2 min |
+| F5 iPad | Acceso directo en pantalla de inicio; login Google | Tras editar la hoja, el botón "Actualizar" muestra el cambio al instante |
 | F6 Uso | 2 semanas de uso; ideas nuevas como filas en la hoja | Revisión de qué sobra o falta |
 
 Después: skill `seguimiento` para actualizar la hoja desde cualquier chat y tarea semanal de lo parado.
