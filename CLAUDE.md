@@ -101,6 +101,7 @@ Pendiente:
 - Botón "Actualizar" y hora de la última lectura real (hora de Madrid).
 - Métricas: terminados este año, empezados este año, terminados este mes, empezados este mes, en curso con el límite WIP = 5 (`n/5`, delta en rojo si se supera). Las métricas y el límite se calculan siempre sobre todos los ítems, sin filtros.
 - Filtros táctiles por tipo (Proyecto/Curso/Libro) y por área. Afectan solo a las listas y al desglose; una selección vacía significa "todos".
+- Cada barra de progreso (lista, ítem y fases) lleva a la derecha su porcentaje, cortado hacia abajo: solo muestra 100 % cuando está completo.
 - Bloque En curso, con un desplegable (por defecto "Todos"):
   - "Todos": lista de todos los ítems en curso con barra de progreso, ordenada por progreso de mayor a menor (los del 0 % al final). Entre ítems con el mismo progreso va primero el más parado, y los que no tienen `ult_act` al final. Marca lo que lleva más de 21 días sin tocar; sin `ult_act` se muestra "sin fecha" y no se alerta.
   - Una opción por ítem con progreso entre 0 % y 100 % (los que están al 0 % no aparecen como opción): barra por fase, siguiente paso y curva acumulada de pasos hechos por semana (solo si el ítem tiene pasos en `Pasos`). Con filtros activos, el desplegable ofrece solo los ítems filtrados.
