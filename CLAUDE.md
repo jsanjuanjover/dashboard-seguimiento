@@ -86,7 +86,7 @@ Hecho:
 - [x] Repo privado en GitHub (`jsanjuanjover/dashboard-seguimiento`), con `.gitignore` (incluye `.streamlit/secrets.toml`) antes del primer commit.
 - [x] Entorno con `uv` (`pyproject.toml` + `uv.lock`) y `requirements.txt` exportado para la nube.
 - [x] `.streamlit/secrets.toml` local con `[connections.gsheets]` (ignorado por git).
-- [x] `app.py` v1 escrita (capa `datos/`, capa `vistas/`, 21 tests) y comprobada de forma automática contra la hoja real.
+- [x] `app.py` v1 escrita (capa `datos/`, capa `vistas/`, 27 tests) y comprobada de forma automática contra la hoja real.
 - [x] v1 fusionada en `main` (PR #1) y rama `feat/dashboard-v1` borrada.
 
 Pendiente:
@@ -99,12 +99,13 @@ Pendiente:
 ## Contenido de la v1
 
 - Botón "Actualizar" y hora de la última lectura real (hora de Madrid).
-- Métricas: terminados este año, empezados este año, terminados este mes, empezados este mes, en curso con el límite WIP = 5 (`n/5`, delta en rojo si se supera). Las métricas y el límite se calculan siempre sobre todos los ítems, sin filtros.
+- Métricas: terminados este año, empezados este año, terminados este mes, empezados este mes, en curso con el límite WIP = 5 (`n/5`, delta en rojo si se supera). Las métricas y el límite se calculan siempre sobre todos los ítems, sin filtros. "En curso" cuenta solo lo ya empezado (estado En curso y progreso > 0); lo que está al 0 % no consume el límite.
 - Filtros táctiles por tipo (Proyecto/Curso/Libro) y por área. Afectan solo a las listas y al desglose; una selección vacía significa "todos".
 - Cada barra de progreso (lista, ítem y fases) lleva a la derecha su porcentaje, cortado hacia abajo: solo muestra 100 % cuando está completo.
 - Bloque En curso, con un desplegable (por defecto "Todos"):
-  - "Todos": lista de todos los ítems en curso con barra de progreso, ordenada por progreso de mayor a menor (los del 0 % al final). Entre ítems con el mismo progreso va primero el más parado, y los que no tienen `ult_act` al final. Marca lo que lleva más de 21 días sin tocar; sin `ult_act` se muestra "sin fecha" y no se alerta.
-  - Una opción por ítem con progreso entre 0 % y 100 % (los que están al 0 % no aparecen como opción): barra por fase, siguiente paso y curva acumulada de pasos hechos por semana (solo si el ítem tiene pasos en `Pasos`). Con filtros activos, el desplegable ofrece solo los ítems filtrados.
+  - "Todos": lista de los ítems en curso con avance (progreso > 0) y barra de progreso, ordenada por progreso de mayor a menor. Entre ítems con el mismo progreso va primero el más parado, y los que no tienen `ult_act` al final. Marca lo que lleva más de 21 días sin tocar; sin `ult_act` se muestra "sin fecha" y no se alerta.
+  - Una opción por ítem con progreso entre 0 % y 100 %: barra por fase, siguiente paso y curva acumulada de pasos hechos por semana (solo si el ítem tiene pasos en `Pasos`). Con filtros activos, el desplegable ofrece solo los ítems filtrados.
+- Bloque No empezados, debajo de En curso y con los mismos filtros: ítems con estado En curso en la hoja y progreso 0 %. Pasan solos a En curso en cuanto tienen avance. Muestran su avance (p. ej. "0/304 págs") sin barra; si no tienen `total` válido ni pasos, se avisa de que hay que revisar `actual` y `total` (un 0 % puede ser "sin datos" y no "sin empezar"). Los ítems con estado `Idea` no entran aquí.
 - Bloque Pausados: nombre y desde cuándo.
 - Bloque Últimos finalizados: pestañas por tipo (Proyectos, Cursos, Libros), con los últimos 5 de cada uno en lista numerada, ordenados por `fin`.
 - Desglose por tipo y por área (recuentos por estado). Los ítems con celdas vacías aparecen como "(sin asignar)" para que los totales cuadren.
@@ -121,7 +122,7 @@ datos/
   carga.py             # lee las hojas y convierte fechas dd/mm/aaaa y números (tolera huecos)
   calculos.py          # reglas: progreso, parado, métricas, listas, detalle por pasos, desglose
 vistas/
-  bloques.py           # solo dibuja: métricas, filtros, En curso, Pausados, Finalizados, Desglose
+  bloques.py           # solo dibuja: métricas, filtros, En curso, No empezados, Pausados, Finalizados, Desglose
 tests/
   test_calculos.py     # comprueba las reglas con filas inventadas (bordes de fechas, huecos, etc.)
 ```
