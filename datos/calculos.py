@@ -60,7 +60,7 @@ def filtrar(df, tipos, areas):
 
 
 def en_curso(df):
-    return df[df["estado"].eq("En curso")].sort_values("ult_act_efectiva")
+    return df[df["estado"].eq("En curso")].sort_values(["pct", "ult_act_efectiva"], ascending=[False, True])
 
 
 def en_progreso(df):

@@ -104,10 +104,25 @@ def test_metricas_en_los_bordes_de_periodo():
     }
 
 
-def test_en_curso_ordena_por_mas_parado_primero():
-    df = items(fila("nuevo", ult_act="29/09/2026"), fila("viejo", ult_act="01/08/2026"), fila("pausa", estado="Pausado"))
+def test_en_curso_ordena_por_progreso_descendente():
+    df = items(
+        fila("medio", actual=5, total=10),
+        fila("cero", actual=0, total=10),
+        fila("casi", actual=9, total=10),
+        fila("pausa", estado="Pausado", actual=10, total=10),
+    )
     r = en_curso(enriquecer(df, SIN_PASOS, HOY))
-    assert list(r["nombre"]) == ["viejo", "nuevo"]
+    assert list(r["nombre"]) == ["casi", "medio", "cero"]
+
+
+def test_en_curso_empate_de_progreso_mas_parado_primero_y_sin_fecha_al_final():
+    df = items(
+        fila("nuevo", ult_act="29/09/2026"),
+        fila("sin_fecha", ult_act=None),
+        fila("viejo", ult_act="01/08/2026"),
+    )
+    r = en_curso(enriquecer(df, SIN_PASOS, HOY))
+    assert list(r["nombre"]) == ["viejo", "nuevo", "sin_fecha"]
 
 
 def test_ultimos_finalizados_recientes_y_limitados():
