@@ -11,6 +11,7 @@ from datos.calculos import (
     filtrar,
     finalizados_por_tipo,
     metricas,
+    no_empezados,
     ultimos_finalizados,
 )
 from datos.carga import tipar_items, tipar_pasos
@@ -92,7 +93,7 @@ def test_metricas_en_los_bordes_de_periodo():
         fila("anio_pasado", estado="Finalizado", fin="31/12/2025", inicio="31/12/2025"),
         fila("mismo_mes_otro_anio", estado="Finalizado", fin="15/09/2025"),
         fila("abandonado", estado="Abandonado", fin="10/09/2026"),
-        fila("curso"),
+        fila("curso", actual=5, total=10),
     )
     m = metricas(enriquecer(df, SIN_PASOS, HOY), HOY)
     assert m == {
@@ -112,17 +113,63 @@ def test_en_curso_ordena_por_progreso_descendente():
         fila("pausa", estado="Pausado", actual=10, total=10),
     )
     r = en_curso(enriquecer(df, SIN_PASOS, HOY))
-    assert list(r["nombre"]) == ["casi", "medio", "cero"]
+    assert list(r["nombre"]) == ["casi", "medio"]
 
 
 def test_en_curso_empate_de_progreso_mas_parado_primero_y_sin_fecha_al_final():
     df = items(
-        fila("nuevo", ult_act="29/09/2026"),
-        fila("sin_fecha", ult_act=None),
-        fila("viejo", ult_act="01/08/2026"),
+        fila("nuevo", actual=5, total=10, ult_act="29/09/2026"),
+        fila("sin_fecha", actual=5, total=10, ult_act=None),
+        fila("viejo", actual=5, total=10, ult_act="01/08/2026"),
     )
     r = en_curso(enriquecer(df, SIN_PASOS, HOY))
     assert list(r["nombre"]) == ["viejo", "nuevo", "sin_fecha"]
+
+
+def test_no_empezados_son_los_en_curso_al_cero_por_ciento():
+    df = items(
+        fila("empezado", actual=1, total=10),
+        fila("cero", actual=0, total=10),
+        fila("vacio", actual=None, total=10),
+        fila("idea", estado="Idea", actual=0, total=10),
+        fila("pausa", estado="Pausado", actual=0, total=10),
+    )
+    d = enriquecer(df, SIN_PASOS, HOY)
+    assert list(no_empezados(d)["nombre"]) == ["cero", "vacio"]
+    assert list(en_curso(d)["nombre"]) == ["empezado"]
+
+
+def test_en_curso_y_no_empezados_no_se_solapan_y_suman_los_marcados():
+    df = items(*[fila(f"i{i}", actual=i, total=4) for i in range(5)])
+    d = enriquecer(df, SIN_PASOS, HOY)
+    assert set(en_curso(d)["nombre"]).isdisjoint(no_empezados(d)["nombre"])
+    assert len(en_curso(d)) + len(no_empezados(d)) == 5
+
+
+def test_un_item_sube_a_en_curso_en_cuanto_tiene_avance():
+    antes = enriquecer(items(fila("libro", actual=0, total=100)), SIN_PASOS, HOY)
+    despues = enriquecer(items(fila("libro", actual=1, total=100)), SIN_PASOS, HOY)
+    assert list(no_empezados(antes)["nombre"]) == ["libro"] and en_curso(antes).empty
+    assert list(en_curso(despues)["nombre"]) == ["libro"] and no_empezados(despues).empty
+
+
+def test_item_con_pasos_y_ninguno_hecho_es_no_empezado_sin_marcar_sin_datos():
+    p = pasos(["TFM", "1", "a", 1, "Pendiente", None], ["TFM", "1", "b", 2, "Pendiente", None])
+    d = enriquecer(items(fila("TFM", tipo="Proyecto")), p, HOY)
+    assert list(no_empezados(d)["nombre"]) == ["TFM"]
+    assert not d["sin_datos"].iloc[0]
+
+
+def test_sin_datos_solo_sin_total_valido_ni_pasos():
+    df = items(fila("vacio"), fila("total_cero", total=0), fila("normal", actual=0, total=10))
+    d = enriquecer(df, SIN_PASOS, HOY).set_index("nombre")
+    assert list(d["sin_datos"]) == [True, True, False]
+    assert list(no_empezados(d.reset_index())["nombre"]) == ["normal", "total_cero", "vacio"]
+
+
+def test_metrica_en_curso_cuenta_solo_lo_empezado():
+    df = items(fila("a", actual=3, total=10), fila("b", actual=0, total=10), fila("c"))
+    assert metricas(enriquecer(df, SIN_PASOS, HOY), HOY)["en_curso"] == 1
 
 
 def test_ultimos_finalizados_recientes_y_limitados():

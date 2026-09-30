@@ -50,6 +50,7 @@ def dashboard():
         en_curso = calculos.en_curso(vista)
         detalles = {r.nombre: calculos.detalle(pasos, r.nombre, hoy) for r in calculos.en_progreso(en_curso).itertuples()}
         bloques.en_curso(en_curso, detalles)
+        bloques.no_empezados(calculos.no_empezados(vista))
     with derecha:
         bloques.pausados(calculos.pausados(vista))
         bloques.finalizados(calculos.finalizados_por_tipo(vista))
