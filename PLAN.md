@@ -15,7 +15,7 @@ Decisiones cerradas:
 | Tema | Decisión |
 |---|---|
 | Límite WIP | 5; `n/5` en rojo si se supera; cuenta solo lo empezado (progreso > 0) |
-| Dispositivo | iPad táctil, apaisado; también PC |
+| Dispositivo | iPad nuevo táctil, apaisado (el iPad Air 2 no carga la app); también PC |
 | Bloqueo del iPad | automático a ~1 h (no siempre encendido) |
 | Tema | automático (sigue el del sistema) |
 | Privacidad | app privada en Community Cloud |

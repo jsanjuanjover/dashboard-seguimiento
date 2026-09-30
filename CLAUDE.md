@@ -135,6 +135,8 @@ tests/
 
 ## Riesgos conocidos
 
+- El iPad Air 2 (máximo iPadOS 15, Safari 15) muestra la pantalla en blanco con esta app; el iPad nuevo y el PC funcionan. La causa más probable es que la interfaz de Streamlit exige un navegador más moderno (no confirmado con una app pública de Streamlit). La tablet fija es el iPad nuevo.
+- En pruebas en local, una pestaña abierta antes de reiniciar el servidor se queda en blanco: cerrarla y abrir una nueva. En el iPad hay que escribir la dirección con `http://` (el servidor local no tiene https).
 - Community Cloud solo permite **una app privada a la vez**; los viewers se invitan por email.
 - La app hiberna tras 12 h sin tráfico y hay que despertarla con un botón. No está confirmado si una sesión abierta que se refresca sola cuenta como tráfico. Como el iPad se bloquea a ~1 h, al desbloquearlo puede hacer falta refrescar la URL.
 - Si la lectura falla con "permission denied" o "not found", casi seguro es que la hoja no está compartida con la cuenta de servicio.
