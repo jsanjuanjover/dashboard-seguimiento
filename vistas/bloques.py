@@ -17,10 +17,11 @@ def _dias(valor):
 def _avance(r):
     if r.pasos_total > 0:
         return f"{r.pasos_hechos}/{r.pasos_total} pasos"
-    if pd.isna(r.total):
+    if pd.isna(r.total) or r.total <= 0:
         return "sin datos"
     actual = 0 if pd.isna(r.actual) else r.actual
-    return f"{actual:.0f}/{r.total:.0f} {r.unidad}"
+    unidad = "" if pd.isna(r.unidad) else f" {r.unidad}"
+    return f"{actual:.0f}/{r.total:.0f}{unidad}"
 
 
 def _metrica_wip(n):
@@ -50,16 +51,47 @@ def filtros(df):
     return tipos or [], sel_areas or []
 
 
-def en_curso(df):
+def _corto(nombre, largo=22):
+    return nombre if len(nombre) <= largo else nombre[: largo - 1] + "…"
+
+
+def _lista_en_curso(df):
+    if df.empty:
+        st.caption("Nada en curso.")
+    for r in df.itertuples():
+        texto = f"**{r.nombre}** · {_avance(r)} · {_dias(r.dias_sin_tocar)}"
+        if r.parado:
+            texto = f":material/warning: {texto} · :red[más de {DIAS_PARADO} días sin tocar]"
+        st.progress(r.pct, text=texto)
+
+
+def _detalle_item(r, d):
+    st.progress(r.pct, text=f"**{r.nombre}** · {_avance(r)}")
+    if d["fases"].empty:
+        st.caption("Este ítem no tiene pasos en la pestaña Pasos de la hoja.")
+        return
+    st.markdown("**Fases**")
+    for f in d["fases"].itertuples():
+        st.progress(f.pct, text=f"{f.fase} · {f.hechos}/{f.total}")
+    if d["siguiente"]:
+        st.markdown(f"**Siguiente paso:** {d['siguiente']['paso']} ({d['siguiente']['fase']})")
+    if not d["curva"].empty:
+        st.markdown("**Pasos hechos por semana (acumulado)**")
+        st.line_chart(d["curva"], height=200)
+
+
+def en_curso(df, detalles):
     with st.container(border=True):
         st.subheader("En curso")
-        if df.empty:
-            st.caption("Nada en curso.")
-        for r in df.itertuples():
-            texto = f"**{r.nombre}** · {_avance(r)} · {_dias(r.dias_sin_tocar)}"
-            if r.parado:
-                texto = f":material/warning: {texto} · :red[más de {DIAS_PARADO} días sin tocar]"
-            st.progress(r.pct, text=texto)
+        if not detalles:
+            _lista_en_curso(df)
+            return
+        pestanas = st.tabs(["Todos"] + [_corto(nombre) for nombre in detalles])
+        with pestanas[0]:
+            _lista_en_curso(df)
+        for pestana, (nombre, d) in zip(pestanas[1:], detalles.items()):
+            with pestana:
+                _detalle_item(next(df[df["nombre"].eq(nombre)].itertuples()), d)
 
 
 def pausados(df):

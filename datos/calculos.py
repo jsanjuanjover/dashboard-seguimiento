@@ -4,6 +4,7 @@ LIMITE_WIP = 5
 DIAS_PARADO = 21
 ESTADOS = ["Idea", "En curso", "Pausado", "Finalizado", "Abandonado"]
 TIPOS = ["Proyecto", "Curso", "Libro"]
+SIN_ASIGNAR = "(sin asignar)"
 
 
 def enriquecer(items, pasos, hoy):
@@ -18,7 +19,8 @@ def enriquecer(items, pasos, hoy):
     con_pasos = df["pasos_total"] > 0
 
     pct_pasos = df["pasos_hechos"] / df["pasos_total"].where(con_pasos)
-    pct_cifras = (df["actual"] / df["total"]).clip(0, 1)
+    total_valido = df["total"].where(df["total"] > 0)
+    pct_cifras = (df["actual"] / total_valido).clip(0, 1)
     df["pct"] = pct_pasos.where(con_pasos, pct_cifras).fillna(0)
 
     fecha_ultimo_hecho = ultimo_hecho.reindex(df["nombre"]).set_axis(df.index)
@@ -61,6 +63,34 @@ def en_curso(df):
     return df[df["estado"].eq("En curso")].sort_values("ult_act_efectiva")
 
 
+def en_progreso(df):
+    """Ítems ya empezados y aún no completados (ni 0 % ni 100 %)."""
+    return df[(df["pct"] > 0) & (df["pct"] < 1)]
+
+
+def _curva(p, hecho, hoy):
+    fechas = p.loc[hecho, "fecha_hecho"].dropna()
+    if fechas.empty:
+        return pd.DataFrame()
+    inicio_semana = fechas.dt.to_period("W-SUN").dt.start_time
+    por_semana = inicio_semana.value_counts().sort_index()
+    esta_semana = pd.Period(hoy, "W-SUN").start_time
+    semanas = pd.date_range(por_semana.index.min(), max(por_semana.index.max(), esta_semana), freq="7D")
+    acumulado = por_semana.reindex(semanas, fill_value=0).cumsum()
+    return pd.DataFrame({"Hechos": acumulado, "Total": len(p)})
+
+
+def detalle(pasos, nombre, hoy):
+    """Fases, siguiente paso y curva semanal acumulada de un ítem con pasos."""
+    p = pasos[pasos["proyecto"].eq(nombre)].sort_values("orden")
+    hecho = p["estado"].eq("Hecho")
+    fases = p.assign(hecho=hecho).groupby("fase", sort=False)["hecho"].agg(hechos="sum", total="size")
+    fases["pct"] = fases["hechos"] / fases["total"]
+    pendientes = p[~hecho]
+    siguiente = None if pendientes.empty else pendientes.iloc[0][["fase", "paso"]].to_dict()
+    return {"fases": fases.reset_index(), "siguiente": siguiente, "curva": _curva(p, hecho, hoy)}
+
+
 def pausados(df):
     return df[df["estado"].eq("Pausado")].sort_values("ult_act_efectiva")
 
@@ -76,5 +106,8 @@ def finalizados_por_tipo(df, n=5):
 
 def desglose(df, por):
     """Recuento de ítems por `por` (tipo o area) y estado."""
-    tabla = pd.crosstab(df[por], df["estado"])
-    return tabla.reindex(columns=ESTADOS, fill_value=0)
+    filas = df[por].fillna(SIN_ASIGNAR)
+    estados = df["estado"].fillna(SIN_ASIGNAR)
+    tabla = pd.crosstab(filas, estados)
+    extra = [c for c in tabla.columns if c not in ESTADOS]
+    return tabla.reindex(columns=ESTADOS + extra, fill_value=0)

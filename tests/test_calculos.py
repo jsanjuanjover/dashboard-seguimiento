@@ -4,7 +4,9 @@ import pytest
 
 from datos.calculos import (
     desglose,
+    detalle,
     en_curso,
+    en_progreso,
     enriquecer,
     filtrar,
     finalizados_por_tipo,
@@ -114,6 +116,20 @@ def test_ultimos_finalizados_recientes_y_limitados():
     assert list(r["nombre"]) == ["l7", "l6", "l5", "l4", "l3"]
 
 
+def test_desglose_cuadra_con_celdas_vacias():
+    df = items(
+        fila("a", area="Trabajo"),
+        fila("b", area=None),
+        fila("c", area="Trabajo", estado=None),
+        fila("d", tipo=None, area="Trabajo"),
+    )
+    por_area = desglose(df, "area")
+    assert por_area.to_numpy().sum() == len(df)
+    assert por_area.loc["(sin asignar)", "En curso"] == 1
+    assert por_area.loc["Trabajo", "(sin asignar)"] == 1
+    assert desglose(df, "tipo").to_numpy().sum() == len(df)
+
+
 def test_finalizados_separados_por_tipo_con_limite_por_tipo():
     filas = [fila(f"l{i}", tipo="Libro", estado="Finalizado", fin=f"{i:02d}/01/2026") for i in range(1, 8)]
     filas += [fila("c1", tipo="Curso", estado="Finalizado", fin="01/02/2026"), fila("p1", tipo="Proyecto")]
@@ -122,6 +138,41 @@ def test_finalizados_separados_por_tipo_con_limite_por_tipo():
     assert list(r["Libro"]["nombre"]) == ["l7", "l6", "l5", "l4", "l3"]
     assert list(r["Curso"]["nombre"]) == ["c1"]
     assert r["Proyecto"].empty
+
+
+def test_total_cero_se_trata_como_sin_datos():
+    df = items(fila(actual=30, total=0), fila("neg", actual=30, total=-5))
+    assert list(enriquecer(df, SIN_PASOS, HOY)["pct"]) == [0, 0]
+
+
+def test_en_progreso_excluye_0_y_100():
+    df = items(fila("cero", actual=0, total=10), fila("medio", actual=5, total=10), fila("lleno", actual=10, total=10))
+    r = en_progreso(enriquecer(df, SIN_PASOS, HOY))
+    assert list(r["nombre"]) == ["medio"]
+
+
+def test_detalle_fases_siguiente_paso_y_curva():
+    p = pasos(
+        ["TFM", "2. Modelos", "e", 5, "Pendiente", None],
+        ["TFM", "1. Datos", "b", 2, "Hecho", "10/09/2026"],
+        ["TFM", "2. Modelos", "d", 4, "Hecho", "22/09/2026"],
+        ["TFM", "1. Datos", "c", 3, "Pendiente", None],
+        ["TFM", "1. Datos", "a", 1, "Hecho", "08/09/2026"],
+        ["Otro", "X", "z", 1, "Hecho", "01/09/2026"],
+    )
+    d = detalle(p, "TFM", HOY)
+    assert list(d["fases"]["fase"]) == ["1. Datos", "2. Modelos"]
+    assert list(d["fases"]["hechos"]) == [2, 1]
+    assert list(d["fases"]["total"]) == [3, 2]
+    assert d["siguiente"] == {"fase": "1. Datos", "paso": "c"}
+    assert list(d["curva"]["Hechos"]) == [2, 2, 3, 3]
+    assert list(d["curva"]["Total"]) == [5, 5, 5, 5]
+    assert d["curva"].index[0] == pd.Timestamp("2026-09-07")
+
+
+def test_detalle_sin_pasos_no_rompe():
+    d = detalle(SIN_PASOS, "TFM", HOY)
+    assert d["fases"].empty and d["siguiente"] is None and d["curva"].empty
 
 
 def test_filtrar_seleccion_vacia_es_todos():

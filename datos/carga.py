@@ -23,7 +23,7 @@ def tipar_pasos(df):
     return df
 
 
-def leer_hojas(conn):
-    items = tipar_items(conn.read(worksheet="Items", ttl="1m"))
-    pasos = tipar_pasos(conn.read(worksheet="Pasos", ttl="1m"))
+def leer_hojas(conn, ttl):
+    items = tipar_items(conn.read(worksheet="Items", ttl=ttl))
+    pasos = tipar_pasos(conn.read(worksheet="Pasos", ttl=ttl))
     return items, pasos
