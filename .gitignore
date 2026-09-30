@@ -1,4 +1,4 @@
-# Secretos: nunca versionar
+# Secrets: never version
 .streamlit/secrets.toml
 *.json
 .env
@@ -10,4 +10,3 @@ __pycache__/
 
 # Local
 .claude/settings.local.json
-Untitled
