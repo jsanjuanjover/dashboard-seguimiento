@@ -80,10 +80,10 @@ Hecho:
 - [x] Pestaña renombrada a `Items`, cabeceras, fila 1 congelada, desplegables en `tipo` y `estado`, formato de fecha en `inicio`, `fin` y `ult_act`.
 - [x] Pestaña `Pasos` creada: cabeceras, fila 1 congelada, desplegable de `proyecto` ligado a `Items!A2:A`, desplegable de `estado`, formato de fecha en `fecha_hecho`.
 - [x] Desplegable en `area` con Trabajo, Aprendizaje y Personal/Casa.
-- [x] Datos reales cargados en `Items` y `Pasos` (fases y pasos del TFM y de otros cursos).
+- [x] Datos reales cargados en `Items` y `Pasos` (fases y pasos de proyectos y cursos).
 - [x] Proyecto de Google Cloud en la cuenta Gmail con Google Sheets API y Google Drive API habilitadas.
 - [x] Cuenta de servicio creada con su clave JSON (guardada fuera de cualquier repo) y hoja compartida con ella como Lectora (comprobado: la app lee las dos pestañas).
-- [x] Repo privado en GitHub (`jsanjuanjover/dashboard-seguimiento`), con `.gitignore` (incluye `.streamlit/secrets.toml`) antes del primer commit.
+- [x] Repo público en GitHub (`jsanjuanjover/dashboard-seguimiento`), con `.gitignore` (incluye `.streamlit/secrets.toml`) antes del primer commit. Se comprobó que el historial no contiene secretos. La app de Streamlit sigue siendo privada (la visibilidad del repo y la de la app son independientes).
 - [x] Entorno con `uv` (`pyproject.toml` + `uv.lock`) y `requirements.txt` exportado para la nube.
 - [x] `.streamlit/secrets.toml` local con `[connections.gsheets]` (ignorado por git).
 - [x] `app.py` v1 escrita (capa `datos/`, capa `vistas/`, 27 tests) y comprobada de forma automática contra la hoja real.

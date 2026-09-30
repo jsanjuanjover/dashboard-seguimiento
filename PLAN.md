@@ -79,4 +79,4 @@ F0 y F1 están completas. Queda, en orden:
 
 ## 8. Tareas que se derivan
 
-- [x] En la hoja: pasar la columna `area` a desplegable con las 3 áreas y revisar los valores ya escritos (p. ej. la fila TFM HAR tenía "Máster").
+- [x] En la hoja: pasar la columna `area` a desplegable con las 3 áreas y revisar los valores ya escritos (p. ej. la fila El código Da Vinci tenía "Ficción").
