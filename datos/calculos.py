@@ -22,6 +22,7 @@ def enriquecer(items, pasos, hoy):
     total_valido = df["total"].where(df["total"] > 0)
     pct_cifras = (df["actual"] / total_valido).clip(0, 1)
     df["pct"] = pct_pasos.where(con_pasos, pct_cifras).fillna(0)
+    df["sin_datos"] = ~con_pasos & total_valido.isna()
 
     fecha_ultimo_hecho = ultimo_hecho.reindex(df["nombre"]).set_axis(df.index)
     ultimos = pd.concat([df["ult_act"], fecha_ultimo_hecho], axis=1)
@@ -39,6 +40,10 @@ def _este_mes(fechas, hoy):
     return _este_anio(fechas, hoy) & fechas.dt.month.eq(hoy.month)
 
 
+def _marcado_en_curso(df):
+    return df["estado"].eq("En curso")
+
+
 def metricas(df, hoy):
     terminado = df["estado"].eq("Finalizado")
     return {
@@ -46,7 +51,7 @@ def metricas(df, hoy):
         "empezados_anio": int(_este_anio(df["inicio"], hoy).sum()),
         "terminados_mes": int((terminado & _este_mes(df["fin"], hoy)).sum()),
         "empezados_mes": int(_este_mes(df["inicio"], hoy).sum()),
-        "en_curso": int(df["estado"].eq("En curso").sum()),
+        "en_curso": len(en_curso(df)),
     }
 
 
@@ -60,7 +65,14 @@ def filtrar(df, tipos, areas):
 
 
 def en_curso(df):
-    return df[df["estado"].eq("En curso")].sort_values(["pct", "ult_act_efectiva"], ascending=[False, True])
+    """Marcados 'En curso' en la hoja y con algún avance (progreso > 0)."""
+    empezados = df[_marcado_en_curso(df) & df["pct"].gt(0)]
+    return empezados.sort_values(["pct", "ult_act_efectiva"], ascending=[False, True])
+
+
+def no_empezados(df):
+    """Marcados 'En curso' en la hoja pero con progreso 0; suben a En curso al tener avance."""
+    return df[_marcado_en_curso(df) & df["pct"].eq(0)].sort_values(["sin_datos", "nombre"])
 
 
 def en_progreso(df):

@@ -95,6 +95,16 @@ def en_curso(df, detalles):
             _detalle_item(next(df[df["nombre"].eq(elegido)].itertuples()), detalles[elegido])
 
 
+def no_empezados(df):
+    with st.container(border=True):
+        st.subheader("No empezados")
+        if df.empty:
+            st.caption("Nada pendiente de empezar.")
+        for r in df.itertuples():
+            aviso = " · :orange[revisa `actual` y `total` en la hoja]" if r.sin_datos else ""
+            st.markdown(f"- **{r.nombre}** · {_avance(r)}{aviso}")
+
+
 def pausados(df):
     with st.container(border=True):
         st.subheader("Pausados")
