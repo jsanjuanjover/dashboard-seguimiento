@@ -51,6 +51,12 @@ def filtros(df):
     return tipos or [], sel_areas or []
 
 
+def _barra(pct, texto):
+    barra, cifra = st.columns([9, 1], vertical_alignment="bottom")
+    barra.progress(pct, text=texto)
+    cifra.markdown(f"**{int(pct * 100)} %**")
+
+
 def _lista_en_curso(df):
     if df.empty:
         st.caption("Nada en curso.")
@@ -58,17 +64,17 @@ def _lista_en_curso(df):
         texto = f"**{r.nombre}** · {_avance(r)} · {_dias(r.dias_sin_tocar)}"
         if r.parado:
             texto = f":material/warning: {texto} · :red[más de {DIAS_PARADO} días sin tocar]"
-        st.progress(r.pct, text=texto)
+        _barra(r.pct, texto)
 
 
 def _detalle_item(r, d):
-    st.progress(r.pct, text=f"**{r.nombre}** · {_avance(r)}")
+    _barra(r.pct, f"**{r.nombre}** · {_avance(r)}")
     if d["fases"].empty:
         st.caption("Este ítem no tiene pasos en la pestaña Pasos de la hoja.")
         return
     st.markdown("**Fases**")
     for f in d["fases"].itertuples():
-        st.progress(f.pct, text=f"{f.fase} · {f.hechos}/{f.total}")
+        _barra(f.pct, f"{f.fase} · {f.hechos}/{f.total}")
     if d["siguiente"]:
         st.markdown(f"**Siguiente paso:** {d['siguiente']['paso']} ({d['siguiente']['fase']})")
     if not d["curva"].empty:
