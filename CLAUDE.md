@@ -86,7 +86,7 @@ Hecho:
 - [x] Repo privado en GitHub (`jsanjuanjover/dashboard-seguimiento`), con `.gitignore` (incluye `.streamlit/secrets.toml`) antes del primer commit.
 - [x] Entorno con `uv` (`pyproject.toml` + `uv.lock`) y `requirements.txt` exportado para la nube.
 - [x] `.streamlit/secrets.toml` local con `[connections.gsheets]` (ignorado por git).
-- [x] `app.py` v1 escrita (capa `datos/`, capa `vistas/`, 20 tests) y comprobada de forma automática contra la hoja real.
+- [x] `app.py` v1 escrita (capa `datos/`, capa `vistas/`, 21 tests) y comprobada de forma automática contra la hoja real.
 
 Pendiente:
 - [ ] Ver la app en el navegador (`uv run streamlit run app.py`) y ajustar lo visual, sobre todo en el iPad.
@@ -101,9 +101,9 @@ Pendiente:
 - Botón "Actualizar" y hora de la última lectura real (hora de Madrid).
 - Métricas: terminados este año, empezados este año, terminados este mes, empezados este mes, en curso con el límite WIP = 5 (`n/5`, delta en rojo si se supera). Las métricas y el límite se calculan siempre sobre todos los ítems, sin filtros.
 - Filtros táctiles por tipo (Proyecto/Curso/Libro) y por área. Afectan solo a las listas y al desglose; una selección vacía significa "todos".
-- Bloque En curso, en pestañas:
-  - "Todos": lista con barra de progreso, ordenada por `ult_act` (lo más parado primero), marcando lo que lleva más de 21 días sin tocar. Sin `ult_act` se muestra "sin fecha" y no se alerta.
-  - Una pestaña por ítem con progreso entre 0 % y 100 %: barra por fase, siguiente paso y curva acumulada de pasos hechos por semana (solo si el ítem tiene pasos en `Pasos`).
+- Bloque En curso, con un desplegable (por defecto "Todos"):
+  - "Todos": lista de todos los ítems en curso con barra de progreso, ordenada por progreso de mayor a menor (los del 0 % al final). Entre ítems con el mismo progreso va primero el más parado, y los que no tienen `ult_act` al final. Marca lo que lleva más de 21 días sin tocar; sin `ult_act` se muestra "sin fecha" y no se alerta.
+  - Una opción por ítem con progreso entre 0 % y 100 % (los que están al 0 % no aparecen como opción): barra por fase, siguiente paso y curva acumulada de pasos hechos por semana (solo si el ítem tiene pasos en `Pasos`). Con filtros activos, el desplegable ofrece solo los ítems filtrados.
 - Bloque Pausados: nombre y desde cuándo.
 - Bloque Últimos finalizados: pestañas por tipo (Proyectos, Cursos, Libros), con los últimos 5 de cada uno en lista numerada, ordenados por `fin`.
 - Desglose por tipo y por área (recuentos por estado). Los ítems con celdas vacías aparecen como "(sin asignar)" para que los totales cuadren.

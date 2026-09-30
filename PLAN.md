@@ -26,7 +26,7 @@ Decisiones cerradas:
 
 1. **Fila de 5 métricas:** terminados año, empezados año, terminados mes, empezados mes, En curso `n/5`.
 2. **Filtros táctiles:** tipo (Proyecto/Curso/Libro) y área.
-3. **Lista En curso:** barra de progreso, orden por `ult_act`, ⚠️ si >21 días.
+3. **Lista En curso:** desplegable (por defecto "Todos", ordenada por progreso descendente) o detalle de un ítem; barra de progreso, ⚠️ si >21 días.
 4. **Pausados:** nombre y desde cuándo.
 5. **Últimos finalizados:** lista corta ordenada por `fin`.
 6. **Desglose:** recuentos por tipo y por área.
