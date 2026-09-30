@@ -88,6 +88,7 @@ Hecho:
 - [x] `.streamlit/secrets.toml` local con `[connections.gsheets]` (ignorado por git).
 - [x] `app.py` v1 escrita (capa `datos/`, capa `vistas/`, 27 tests) y comprobada de forma automática contra la hoja real.
 - [x] v1 fusionada en `main` (PR #1) y rama `feat/dashboard-v1` borrada.
+- [x] Bloque No empezados y métrica En curso solo con lo empezado, fusionados en `main` (PR #2).
 
 Pendiente:
 - [ ] Ver la app en el navegador (`uv run streamlit run app.py`) y ajustar lo visual, sobre todo en el iPad.
