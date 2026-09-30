@@ -1,0 +1,8 @@
+[project]
+name = "dashboard-seguimiento"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "st-gsheets-connection>=0.1.0",
+    "streamlit>=1.64.0",
+]

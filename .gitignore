@@ -1,0 +1,13 @@
+# Secretos: nunca versionar
+.streamlit/secrets.toml
+*.json
+.env
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Local
+.claude/settings.local.json
+Untitled
