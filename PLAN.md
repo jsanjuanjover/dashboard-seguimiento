@@ -69,10 +69,34 @@ Después: skill `seguimiento` para actualizar la hoja desde cualquier chat y tar
 - Desglose y filtros por área: solo 3 áreas de momento. Si en el futuro se añaden más, se revisará el diseño (no se implementa ahora).
 - No empezados: los ítems con estado `Idea` no entran. Un ítem con `actual > 0` pero sin `total` válido ni pasos cuenta como 0 %, no consume el límite y aparece en No empezados con un aviso; se deja así a propósito.
 
-## 7. Siguiente paso
+## 7. Siguientes pasos
 
-F0 a F5 están completas: la app está desplegada, es privada, tiene acceso directo en el iPad nuevo y el botón "Actualizar" trae los cambios de la hoja. Queda:
-- [ ] F6: usarla dos semanas (hasta mediados de octubre de 2026) antes de añadir funciones; las ideas nuevas se apuntan como filas en la hoja.
+F0 a F5 están completas: la app está desplegada, es privada, tiene acceso directo en el iPad nuevo y el botón "Actualizar" trae los cambios de la hoja.
+
+### F6: dos semanas de uso (30/09/2026 - 14/10/2026)
+Regla: no se añaden funciones. Las ideas nuevas se apuntan como filas en la hoja o en el apartado "Ideas aparcadas".
+
+Qué observar:
+- [ ] ¿Miras el dashboard a diario? ¿Qué bloque miras primero y cuál nunca?
+- [ ] ¿El límite WIP de 5 te frena o lo ignoras? ¿Se acumulan ítems "En curso" al 0 %?
+- [ ] ¿El aviso de 21 días sin tocar te ha servido para retomar algo?
+- [ ] ¿Se duerme la app tras 12 h sin tráfico? ¿Hay que despertarla o refrescar al desbloquear el iPad?
+- [ ] ¿Mantienes la hoja al día (`actual`, `ult_act`, estados) sin que sea una carga?
+- [ ] ¿Algo se ve mal o se queda corto en el iPad (textos, porcentajes, desplegable, filtros)?
+
+Revisión final el 14/10/2026: decidir qué sobra, qué falta y qué pasa a la siguiente fase.
+
+### Después de F6 (opcional, sin fecha)
+- [ ] Mini-skill `seguimiento` para que cualquier chat de Claude actualice la hoja con las mismas reglas.
+- [ ] Tarea programada semanal que revise lo parado.
+
+### Ideas aparcadas (no implementar hasta la revisión)
+- Ponderar los pasos con una columna `peso` en `Pasos`.
+- Umbral de "parado" distinto por tipo (libros, cursos, proyectos).
+- Rediseñar filtros y desglose si se añaden más de 3 áreas.
+- Avisar cuando un ítem con `actual > 0` no tiene `total` y cae en "No empezados".
+- Mostrar los ítems con estado `Idea`.
+- Versión ligera sin Streamlit, solo si hiciera falta usar el iPad Air 2 (no carga la app actual).
 
 ## 8. Tareas que se derivan
 
