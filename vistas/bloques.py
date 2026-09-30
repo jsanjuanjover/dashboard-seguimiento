@@ -51,10 +51,6 @@ def filtros(df):
     return tipos or [], sel_areas or []
 
 
-def _corto(nombre, largo=22):
-    return nombre if len(nombre) <= largo else nombre[: largo - 1] + "…"
-
-
 def _lista_en_curso(df):
     if df.empty:
         st.caption("Nada en curso.")
@@ -86,12 +82,11 @@ def en_curso(df, detalles):
         if not detalles:
             _lista_en_curso(df)
             return
-        pestanas = st.tabs(["Todos"] + [_corto(nombre) for nombre in detalles])
-        with pestanas[0]:
+        elegido = st.selectbox("Detalle", ["Todos", *detalles], label_visibility="collapsed")
+        if elegido == "Todos":
             _lista_en_curso(df)
-        for pestana, (nombre, d) in zip(pestanas[1:], detalles.items()):
-            with pestana:
-                _detalle_item(next(df[df["nombre"].eq(nombre)].itertuples()), d)
+        else:
+            _detalle_item(next(df[df["nombre"].eq(elegido)].itertuples()), detalles[elegido])
 
 
 def pausados(df):
