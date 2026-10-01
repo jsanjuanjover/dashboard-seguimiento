@@ -83,6 +83,7 @@ Qué observar:
 - [ ] ¿Se duerme la app tras 12 h sin tráfico? ¿Hay que despertarla o refrescar al desbloquear el iPad?
 - [ ] ¿Mantienes la hoja al día (`actual`, `ult_act`, estados) sin que sea una carga?
 - [ ] ¿Algo se ve mal o se queda corto en el iPad (textos, porcentajes, desplegable, filtros)?
+- [ ] Investigar por qué hay un proyecto al 100 % en "En curso" que no aparece en "Últimos finalizados". Caso concreto: "Proyecto Dashboard" (al 100 %, estado En curso). Hipótesis: en la hoja sigue con `estado = En curso` (no `Finalizado`) o le falta `fin`, y "Últimos finalizados" solo lista `Finalizado` con `fin`. Comprobar la fila en la hoja antes de tocar código.
 
 Revisión final el 14/10/2026: decidir qué sobra, qué falta y qué pasa a la siguiente fase.
 
@@ -91,6 +92,8 @@ Revisión final el 14/10/2026: decidir qué sobra, qué falta y qué pasa a la s
 - [ ] Tarea programada semanal que revise lo parado.
 
 ### Ideas aparcadas (no implementar hasta la revisión)
+- Revisión siguiente: sacar de "En curso" los ítems que estén al 100 % (decidir si desaparecen del bloque o se avisa de que hay que pasarlos a Finalizado en la hoja). Va ligado a la investigación de F6 sobre el proyecto al 100 % que no sale en "Últimos finalizados".
+- Artículo: contar este caso y otros como problemas que solo se ven una vez desplegado y en uso (p. ej. "Proyecto Dashboard" al 100 % pero En curso; iPad Air 2 en blanco; app que hiberna). Ir apuntando los casos durante F6.
 - Ponderar los pasos con una columna `peso` en `Pasos`.
 - Umbral de "parado" distinto por tipo (libros, cursos, proyectos).
 - Rediseñar filtros y desglose si se añaden más de 3 áreas.
