@@ -16,6 +16,10 @@ def enriquecer(items, pasos, hoy):
     hechos = pasos[pasos["estado"].eq("Hecho")].groupby("proyecto").size()
     ultimo_hecho = pasos.groupby("proyecto")["fecha_hecho"].max()
 
+    pendientes = pasos[pasos["estado"].ne("Hecho")].sort_values("orden")
+    siguiente = pendientes.groupby("proyecto")["paso"].first()
+
+    df["siguiente_paso"] = df["nombre"].map(siguiente)
     df["pasos_total"] = df["nombre"].map(totales).fillna(0).astype(int)
     df["pasos_hechos"] = df["nombre"].map(hechos).fillna(0).astype(int)
     con_pasos = df["pasos_total"] > 0

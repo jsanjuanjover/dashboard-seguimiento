@@ -61,7 +61,8 @@ def _lista_en_curso(df):
     if df.empty:
         st.caption("Nada en curso.")
     for r in df.itertuples():
-        texto = f"**{r.nombre}** · {_avance(r)} · {_dias(r.dias_sin_tocar)}"
+        avance = _avance(r) if pd.isna(r.siguiente_paso) else f"Siguiente: {r.siguiente_paso}"
+        texto = f"**{r.nombre}** · {avance} · {_dias(r.dias_sin_tocar)}"
         if r.parado:
             texto = f":material/warning: {texto} · :red[más de {DIAS_PARADO} días sin tocar]"
         _barra(r.pct, texto)
