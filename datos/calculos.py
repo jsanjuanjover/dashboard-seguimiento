@@ -35,10 +35,15 @@ def enriquecer(items, pasos, hoy):
     # Lo marcado 'En curso' al 100 % cuenta como Finalizado aunque la hoja no lo diga.
     # Sin `fin`, se toma el día del último paso hecho o, si no hay pasos, `ult_act`.
     completo = _marcado_en_curso(df) & df["pct"].ge(1)
+    # Y al revés: lo Finalizado que deja de estar al 100 % (p. ej. por un paso nuevo) vuelve a En curso.
+    # Lo que no tiene datos de progreso se respeta, porque su 0 % no dice nada.
+    reabierto = df["estado"].eq("Finalizado") & df["pct"].lt(1) & ~df["sin_datos"]
     df["finalizado_auto"] = completo
+    df["reabierto"] = reabierto
     df.loc[completo, "estado"] = "Finalizado"
+    df.loc[reabierto, "estado"] = "En curso"
     fin_deducido = df["fin"].fillna(fecha_ultimo_hecho).fillna(df["ult_act"])
-    df["fin"] = df["fin"].where(~completo, fin_deducido)
+    df["fin"] = df["fin"].where(~completo, fin_deducido).mask(reabierto)
     return df
 
 
