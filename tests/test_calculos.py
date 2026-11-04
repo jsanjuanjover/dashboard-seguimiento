@@ -274,6 +274,19 @@ def test_reabierto_no_cuenta_como_terminado():
     assert m["terminados_mes"] == 0 and m["terminados_anio"] == 0 and m["en_curso"] == 1
 
 
+def test_siguiente_paso_es_el_primer_no_hecho_por_orden():
+    p = pasos(
+        ["TFM", "2", "tercero", 3, "Pendiente", None],
+        ["TFM", "1", "primero", 1, "Hecho", "10/09/2026"],
+        ["TFM", "1", "segundo", 2, "En curso", None],
+        ["Hecho", "1", "a", 1, "Hecho", "10/09/2026"],
+    )
+    df = items(fila("TFM", tipo="Proyecto"), fila("Hecho", tipo="Proyecto"), fila("libro", actual=5, total=10))
+    s = enriquecer(df, p, HOY).set_index("nombre")["siguiente_paso"]
+    assert s["TFM"] == "segundo"
+    assert pd.isna(s["Hecho"]) and pd.isna(s["libro"])
+
+
 def test_en_progreso_excluye_0_y_100():
     df = items(fila("cero", actual=0, total=10), fila("medio", actual=5, total=10), fila("lleno", actual=10, total=10))
     r = en_progreso(enriquecer(df, SIN_PASOS, HOY))
