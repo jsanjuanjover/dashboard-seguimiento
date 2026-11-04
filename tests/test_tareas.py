@@ -1,6 +1,6 @@
 import pandas as pd
 
-from datos.calculos import fin_semana_siguiente, tareas_para_hoy, tareas_por_grupo
+from datos.calculos import calendario_tareas, fin_semana_siguiente, tareas_para_hoy, tareas_por_grupo
 from datos.notion import tipar_tareas
 
 HOY = pd.Timestamp("2026-11-04")  # miércoles
@@ -78,6 +78,25 @@ def test_futuras_solo_hasta_el_domingo_de_la_semana_que_viene():
         pagina("hecha_futura", fecha="2026-11-10", estado="Hecha"),
     )
     assert list(tareas_por_grupo(t, HOY)["Futuras"]["tarea"]) == ["viernes", "domingo_prox"]
+
+
+def test_calendario_dos_semanas_de_lunes_a_domingo_con_hoy_recogiendo_atrasadas():
+    t = tareas(
+        pagina("hoy", fecha="2026-11-04"),
+        pagina("atrasada", fecha="2026-11-02"),
+        pagina("sin_fecha"),
+        pagina("viernes", fecha="2026-11-06"),
+        pagina("domingo_prox", fecha="2026-11-15"),
+        pagina("fuera", fecha="2026-11-16"),
+        pagina("hecha", fecha="2026-11-06", estado="Hecha"),
+    )
+    cal = calendario_tareas(tareas_por_grupo(t, HOY), HOY)
+    dias = list(cal)
+    assert len(dias) == 14 and dias[0] == pd.Timestamp("2026-11-02") and dias[-1] == pd.Timestamp("2026-11-15")
+    assert list(cal[HOY]["tarea"]) == ["atrasada", "hoy", "sin_fecha"]
+    assert cal[pd.Timestamp("2026-11-02")].empty
+    assert list(cal[pd.Timestamp("2026-11-06")]["tarea"]) == ["viernes"]
+    assert list(cal[pd.Timestamp("2026-11-15")]["tarea"]) == ["domingo_prox"]
 
 
 def test_hechas_usan_fecha_realizada_antes_que_la_edicion():
