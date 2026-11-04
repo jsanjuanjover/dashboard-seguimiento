@@ -29,6 +29,14 @@ def enriquecer(items, pasos, hoy):
     df["ult_act_efectiva"] = ultimos.max(axis=1)
     df["dias_sin_tocar"] = (hoy - df["ult_act_efectiva"]).dt.days
     df["parado"] = df["dias_sin_tocar"].gt(DIAS_PARADO)
+
+    # Lo marcado 'En curso' al 100 % cuenta como Finalizado aunque la hoja no lo diga.
+    # Sin `fin`, se toma el día del último paso hecho o, si no hay pasos, `ult_act`.
+    completo = _marcado_en_curso(df) & df["pct"].ge(1)
+    df["finalizado_auto"] = completo
+    df.loc[completo, "estado"] = "Finalizado"
+    fin_deducido = df["fin"].fillna(fecha_ultimo_hecho).fillna(df["ult_act"])
+    df["fin"] = df["fin"].where(~completo, fin_deducido)
     return df
 
 

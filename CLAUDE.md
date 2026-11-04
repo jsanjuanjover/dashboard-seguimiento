@@ -116,6 +116,8 @@ Pendiente:
 
 "Terminado" = `estado == "Finalizado"` con `fin` en el periodo. "Empezado" = `inicio` en el periodo. Un total `<= 0` cuenta como "sin datos" (progreso 0 %).
 
+Finalizado automático: un ítem con estado En curso en la hoja y progreso 100 % se trata en la app como Finalizado (sale de En curso, no consume el límite WIP, cuenta en métricas y en Últimos finalizados). Si no tiene `fin`, se deduce: `fin` de la hoja, si no el último `fecha_hecho` de sus pasos, si no `ult_act`. La hoja no se modifica. Idea, Pausado y Abandonado siguen siendo manuales.
+
 ## Estructura del código
 
 ```
