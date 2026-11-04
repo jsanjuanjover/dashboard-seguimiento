@@ -140,10 +140,10 @@ def test_no_empezados_son_los_en_curso_al_cero_por_ciento():
 
 
 def test_en_curso_y_no_empezados_no_se_solapan_y_suman_los_marcados():
-    df = items(*[fila(f"i{i}", actual=i, total=4) for i in range(5)])
+    df = items(*[fila(f"i{i}", actual=i, total=4) for i in range(4)])
     d = enriquecer(df, SIN_PASOS, HOY)
     assert set(en_curso(d)["nombre"]).isdisjoint(no_empezados(d)["nombre"])
-    assert len(en_curso(d)) + len(no_empezados(d)) == 5
+    assert len(en_curso(d)) + len(no_empezados(d)) == 4
 
 
 def test_un_item_sube_a_en_curso_en_cuanto_tiene_avance():
@@ -205,6 +205,42 @@ def test_finalizados_separados_por_tipo_con_limite_por_tipo():
 def test_total_cero_se_trata_como_sin_datos():
     df = items(fila(actual=30, total=0), fila("neg", actual=30, total=-5))
     assert list(enriquecer(df, SIN_PASOS, HOY)["pct"]) == [0, 0]
+
+
+def test_en_curso_al_100_pasa_a_finalizado():
+    df = items(
+        fila("lleno", actual=10, total=10, ult_act="20/09/2026"),
+        fila("casi", actual=9, total=10),
+        fila("pausa", estado="Pausado", actual=10, total=10),
+    )
+    d = enriquecer(df, SIN_PASOS, HOY).set_index("nombre")
+    assert d.loc["lleno", "estado"] == "Finalizado" and d.loc["lleno", "finalizado_auto"]
+    assert d.loc["casi", "estado"] == "En curso"
+    assert d.loc["pausa", "estado"] == "Pausado"
+    assert list(en_curso(d.reset_index())["nombre"]) == ["casi"]
+
+
+def test_fin_deducido_respeta_fin_de_la_hoja_y_luego_pasos_y_ult_act():
+    p = pasos(["TFM", "1", "a", 1, "Hecho", "10/09/2026"], ["TFM", "1", "b", 2, "Hecho", "15/09/2026"])
+    df = items(
+        fila("con_fin", actual=10, total=10, fin="01/09/2026", ult_act="20/09/2026"),
+        fila("TFM", tipo="Proyecto", ult_act="25/09/2026"),
+        fila("libro", actual=10, total=10, ult_act="20/09/2026"),
+        fila("sin_fechas", actual=10, total=10),
+    )
+    fin = enriquecer(df, p, HOY).set_index("nombre")["fin"]
+    assert fin["con_fin"] == pd.Timestamp("2026-09-01")
+    assert fin["TFM"] == pd.Timestamp("2026-09-15")
+    assert fin["libro"] == pd.Timestamp("2026-09-20")
+    assert pd.isna(fin["sin_fechas"])
+
+
+def test_finalizado_auto_cuenta_en_metricas_y_ultimos_finalizados():
+    df = items(fila("lleno", actual=10, total=10, ult_act="20/09/2026"), fila("medio", actual=5, total=10))
+    d = enriquecer(df, SIN_PASOS, HOY)
+    m = metricas(d, HOY)
+    assert m["terminados_mes"] == 1 and m["en_curso"] == 1
+    assert list(ultimos_finalizados(d)["nombre"]) == ["lleno"]
 
 
 def test_en_progreso_excluye_0_y_100():

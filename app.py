@@ -4,6 +4,7 @@ from streamlit_gsheets import GSheetsConnection
 
 from datos import calculos
 from datos.carga import leer_hojas
+from datos.notion import leer_tareas
 from vistas import bloques
 
 st.set_page_config(page_title="Seguimiento", layout="wide")
@@ -23,24 +24,12 @@ def cargar():
     return items, pasos, ahora()
 
 
-@st.fragment(run_every=INTERVALO)
-def dashboard():
-    hoy = ahora().normalize()
-    with st.container(horizontal=True, vertical_alignment="center"):
-        if st.button("Actualizar", icon=":material/refresh:"):
-            cargar.clear()
-        hueco_hora = st.empty()
-    try:
-        items, pasos, leido = cargar()
-        hueco_hora.caption(f"Actualizado a las {leido:%H:%M}")
-    except Exception as e:
-        st.error(
-            f"No se pudo leer la hoja: {type(e).__name__}: {e}. "
-            "Si es 'permission denied' o 'not found', comprueba que está compartida con la cuenta de servicio."
-        )
-        return
-    df = calculos.enriquecer(items, pasos, hoy)
+@st.cache_data(ttl=INTERVALO)
+def cargar_tareas():
+    return leer_tareas(st.secrets["notion"]["token"], st.secrets["notion"]["database_id"])
 
+
+def proyectos(df, pasos, hoy):
     bloques.fila_metricas(calculos.metricas(df, hoy))
     tipos, areas = bloques.filtros(df)
     vista = calculos.filtrar(df, tipos, areas)
@@ -55,6 +44,48 @@ def dashboard():
         bloques.pausados(calculos.pausados(vista))
         bloques.finalizados(calculos.finalizados_por_tipo(vista))
         bloques.desglose(calculos.desglose(vista, "tipo"), calculos.desglose(vista, "area"))
+
+
+@st.fragment(run_every=INTERVALO)
+def dashboard():
+    hoy = ahora().normalize()
+    with st.container(horizontal=True, vertical_alignment="center"):
+        if st.button("Actualizar", icon=":material/refresh:"):
+            cargar.clear()
+            cargar_tareas.clear()
+        hueco_hora = st.empty()
+    try:
+        items, pasos, leido = cargar()
+        hueco_hora.caption(f"Actualizado a las {leido:%H:%M}")
+    except Exception as e:
+        st.error(
+            f"No se pudo leer la hoja: {type(e).__name__}: {e}. "
+            "Si es 'permission denied' o 'not found', comprueba que está compartida con la cuenta de servicio."
+        )
+        return
+    df = calculos.enriquecer(items, pasos, hoy)
+    try:
+        tareas, error_tareas = cargar_tareas(), None
+    except Exception as e:
+        tareas, error_tareas = None, e
+
+    general, pestana_tareas, pestana_proyectos = st.tabs(["General", "Tareas", "Proyectos"])
+    with general:
+        izquierda, derecha = st.columns([2, 3])
+        with izquierda:
+            if error_tareas:
+                bloques.error_notion(error_tareas)
+            else:
+                bloques.tareas_para_hoy(calculos.tareas_para_hoy(tareas, hoy), hoy)
+        with derecha:
+            bloques.en_curso(calculos.en_curso(df), {})
+    with pestana_tareas:
+        if error_tareas:
+            bloques.error_notion(error_tareas)
+        else:
+            bloques.tareas(calculos.tareas_por_grupo(tareas, hoy), hoy)
+    with pestana_proyectos:
+        proyectos(df, pasos, hoy)
 
 
 st.title("Seguimiento")

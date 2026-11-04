@@ -1,7 +1,7 @@
 import pandas as pd
 import streamlit as st
 
-from datos.calculos import DIAS_PARADO, LIMITE_WIP, TIPOS
+from datos.calculos import DIAS_HECHAS, DIAS_PARADO, LIMITE_WIP, TIPOS
 
 
 def _fecha(valor):
@@ -124,6 +124,46 @@ def finalizados(por_tipo):
                     st.caption("Todavía ninguno.")
                 lineas = [f"{i}. **{r.nombre}** · {_fecha(r.fin)}" for i, r in enumerate(df.itertuples(), start=1)]
                 st.markdown("\n".join(lineas))
+
+
+def _linea_tarea(r, hoy):
+    partes = [f"**{r.tarea}**"]
+    partes += [v for v in (r.proyecto, r.prioridad) if not pd.isna(v)]
+    if r.estado == "Hecha":
+        partes.append(f"hecha el {_fecha(r.realizada)}")
+    elif pd.isna(r.fecha):
+        partes.append("sin fecha")
+    elif r.fecha < hoy:
+        partes.append(f":red[atrasada desde {_fecha(r.fecha)}]")
+    else:
+        partes.append(_fecha(r.fecha))
+    return "- " + " · ".join(partes)
+
+
+def _lista_tareas(df, hoy, vacio):
+    if df.empty:
+        st.caption(vacio)
+    st.markdown("\n".join(_linea_tarea(r, hoy) for r in df.itertuples()))
+
+
+def tareas_para_hoy(df, hoy):
+    with st.container(border=True):
+        st.subheader("Tareas para hoy")
+        _lista_tareas(df, hoy, "Nada pendiente para hoy.")
+
+
+def tareas(grupos, hoy):
+    titulos = {"Hoy": "Hoy y atrasadas", "Futuras": "Hasta el domingo de la semana que viene",
+               "Hechas": f"Hechas (últimos {DIAS_HECHAS} días)"}
+    for grupo, df in grupos.items():
+        with st.container(border=True):
+            st.subheader(titulos[grupo])
+            _lista_tareas(df, hoy, "Ninguna.")
+
+
+def error_notion(e):
+    st.error(f"No se pudieron leer las tareas de Notion: {type(e).__name__}: {e}. "
+             "Comprueba el token y que la base de datos esté conectada a la integración.")
 
 
 def desglose(por_tipo, por_area):
