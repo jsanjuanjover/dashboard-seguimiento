@@ -153,13 +153,38 @@ def tareas_para_hoy(df, hoy):
         _lista_tareas(df, hoy, "Nada pendiente para hoy.")
 
 
-def tareas(grupos, hoy):
-    titulos = {"Hoy": "Hoy y atrasadas", "Futuras": "Hasta el domingo de la semana que viene",
-               "Hechas": f"Hechas (últimos {DIAS_HECHAS} días)"}
-    for grupo, df in grupos.items():
-        with st.container(border=True):
-            st.subheader(titulos[grupo])
-            _lista_tareas(df, hoy, "Ninguna.")
+DIAS_SEMANA = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"]
+
+
+def _tarea_en_dia(r, hoy):
+    detalle = " · ".join(v for v in (r.proyecto, r.prioridad) if not pd.isna(v))
+    if pd.isna(r.fecha):
+        detalle = " · ".join(filter(None, [detalle, "sin fecha"]))
+    elif r.fecha < hoy:
+        detalle = " · ".join(filter(None, [detalle, f":red[atrasada {r.fecha:%d/%m}]"]))
+    return f"**{r.tarea}**" + (f"  \n:gray[{detalle}]" if detalle else "")
+
+
+def _dia(dia, df, hoy):
+    titulo = f"{DIAS_SEMANA[dia.weekday()]} {dia:%d/%m}"
+    st.markdown(f":blue-background[**{titulo} · hoy**]" if dia == hoy else f"**{titulo}**")
+    if dia < hoy:
+        return
+    for r in df.itertuples():
+        st.markdown(_tarea_en_dia(r, hoy))
+
+
+def tareas(calendario, hechas, hoy):
+    with st.container(border=True):
+        st.subheader("Esta semana y la siguiente")
+        dias = list(calendario.items())
+        for semana in (dias[:7], dias[7:]):
+            for columna, (dia, df) in zip(st.columns(7, border=True), semana):
+                with columna:
+                    _dia(dia, df, hoy)
+    with st.container(border=True):
+        st.subheader(f"Hechas (últimos {DIAS_HECHAS} días)")
+        _lista_tareas(hechas, hoy, "Ninguna.")
 
 
 def error_notion(e):

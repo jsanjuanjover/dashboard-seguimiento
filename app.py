@@ -83,7 +83,8 @@ def dashboard():
         if error_tareas:
             bloques.error_notion(error_tareas)
         else:
-            bloques.tareas(calculos.tareas_por_grupo(tareas, hoy), hoy)
+            grupos = calculos.tareas_por_grupo(tareas, hoy)
+            bloques.tareas(calculos.calendario_tareas(grupos, hoy), grupos["Hechas"], hoy)
     with pestana_proyectos:
         proyectos(df, pasos, hoy)
 

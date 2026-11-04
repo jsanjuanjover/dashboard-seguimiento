@@ -126,7 +126,7 @@ La app lee también la base de datos de Notion "Tareas asistente" (solo lectura,
 
 Pestañas:
 - **General:** tareas para hoy (no hechas con fecha hoy o anterior; las que no tienen fecha cuentan como de hoy hasta que se hacen) y bloque En curso de proyectos, sin filtros.
-- **Tareas:** Hoy y atrasadas; futuras hasta el domingo de la semana que viene (semanas de lunes a domingo); Hechas en los últimos 30 días según `Fecha realizada` (si falta, la última edición de la página), con la más reciente primero. Pendientes ordenadas por fecha y luego prioridad.
+- **Tareas:** calendario de esta semana y la siguiente (dos filas de lunes a domingo, hoy resaltado). La casilla de hoy recoge también las atrasadas (en rojo) y las que no tienen fecha; los días pasados quedan vacíos. Debajo, las hechas en los últimos 30 días según `Fecha realizada` (si falta, la última edición de la página), con la más reciente primero. Dentro de cada día, por prioridad.
 - **Proyectos:** métricas, filtros y todos los bloques de la v1.
 
 ## Estructura del código

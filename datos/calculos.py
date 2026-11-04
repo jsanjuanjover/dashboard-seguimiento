@@ -165,6 +165,15 @@ def tareas_por_grupo(t, hoy):
     }
 
 
+def calendario_tareas(grupos, hoy):
+    """Tareas por día de esta semana y la siguiente (de lunes a domingo). El día de hoy
+    recoge también las atrasadas y las que no tienen fecha; los días pasados quedan vacíos."""
+    lunes = hoy - pd.Timedelta(days=hoy.weekday())
+    futuras = grupos["Futuras"]
+    return {dia: grupos["Hoy"] if dia == hoy else futuras[futuras["fecha"].eq(dia)]
+            for dia in pd.date_range(lunes, periods=14)}
+
+
 def desglose(df, por):
     """Recuento de ítems por `por` (tipo o area) y estado."""
     filas = df[por].fillna(SIN_ASIGNAR)
