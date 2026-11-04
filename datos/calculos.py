@@ -5,6 +5,8 @@ DIAS_PARADO = 21
 ESTADOS = ["Idea", "En curso", "Pausado", "Finalizado", "Abandonado"]
 TIPOS = ["Proyecto", "Curso", "Libro"]
 SIN_ASIGNAR = "(sin asignar)"
+PRIORIDADES = ["Alta", "Media", "Baja"]
+DIAS_HECHAS = 30
 
 
 def enriquecer(items, pasos, hoy):
@@ -122,6 +124,36 @@ def ultimos_finalizados(df, n=5):
 
 def finalizados_por_tipo(df, n=5):
     return {tipo: ultimos_finalizados(df[df["tipo"].eq(tipo)], n) for tipo in TIPOS}
+
+
+def _orden_tareas(t):
+    rango = t["prioridad"].map({p: i for i, p in enumerate(PRIORIDADES)})
+    return t.assign(_rango=rango).sort_values(["fecha", "_rango"], na_position="last").drop(columns="_rango")
+
+
+def tareas_para_hoy(t, hoy):
+    """No hechas con fecha hoy o anterior; las que no tienen fecha cuentan como de hoy."""
+    pendiente = t["estado"].ne("Hecha")
+    return _orden_tareas(t[pendiente & (t["fecha"].isna() | t["fecha"].le(hoy))])
+
+
+def fin_semana_siguiente(hoy):
+    """Domingo de la semana que viene (semanas de lunes a domingo)."""
+    return hoy - pd.Timedelta(days=hoy.weekday()) + pd.Timedelta(days=13)
+
+
+def tareas_por_grupo(t, hoy):
+    """Hoy (con atrasadas y sin fecha), futuras hasta el domingo de la semana que viene
+    y hechas en los últimos días (por `Fecha realizada` o, si falta, por última edición)."""
+    pendiente = t["estado"].ne("Hecha")
+    futura = t["fecha"].gt(hoy) & t["fecha"].le(fin_semana_siguiente(hoy))
+    t = t.assign(realizada=t["realizada"].fillna(t["editada"]))
+    hechas = t[~pendiente & t["realizada"].ge(hoy - pd.Timedelta(days=DIAS_HECHAS))]
+    return {
+        "Hoy": tareas_para_hoy(t, hoy),
+        "Futuras": _orden_tareas(t[pendiente & futura]),
+        "Hechas": hechas.sort_values("realizada", ascending=False),
+    }
 
 
 def desglose(df, por):

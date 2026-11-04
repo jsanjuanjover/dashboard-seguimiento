@@ -118,17 +118,28 @@ Pendiente:
 
 Finalizado automático: un ítem con estado En curso en la hoja y progreso 100 % se trata en la app como Finalizado (sale de En curso, no consume el límite WIP, cuenta en métricas y en Últimos finalizados). Si no tiene `fin`, se deduce: `fin` de la hoja, si no el último `fecha_hecho` de sus pasos, si no `ult_act`. La hoja no se modifica. Idea, Pausado y Abandonado siguen siendo manuales.
 
+## Tareas de Notion
+
+La app lee también la base de datos de Notion "Tareas asistente" (solo lectura, con una integración interna cuyo token solo tiene acceso a esa base). Columnas: `Tarea` (título), `Estado` (Pendiente, En curso, Hecha), `Fecha límite`, `Prioridad` (Alta, Media, Baja), `Proyecto`, `Notas`, `Fecha realizada`. Secrets en `[notion]`: `token` y `database_id` (fuera de `[connections.gsheets]`, que se pasa entera a la conexión de Sheets). Misma caché de 1 h; el botón "Actualizar" vacía las dos. Si Notion falla, solo sus bloques muestran el error.
+
+Pestañas:
+- **General:** tareas para hoy (no hechas con fecha hoy o anterior; las que no tienen fecha cuentan como de hoy hasta que se hacen) y bloque En curso de proyectos, sin filtros.
+- **Tareas:** Hoy y atrasadas; futuras hasta el domingo de la semana que viene (semanas de lunes a domingo); Hechas en los últimos 30 días según `Fecha realizada` (si falta, la última edición de la página), con la más reciente primero. Pendientes ordenadas por fecha y luego prioridad.
+- **Proyectos:** métricas, filtros y todos los bloques de la v1.
+
 ## Estructura del código
 
 ```
-app.py                 # entrada: configuración, conexión, caché de lectura (1 h), botón y orden de los bloques
+app.py                 # entrada: configuración, conexiones, cachés de lectura (1 h), botón, pestañas y orden de los bloques
 datos/
   carga.py             # lee las hojas y convierte fechas dd/mm/aaaa y números (tolera huecos)
-  calculos.py          # reglas: progreso, parado, métricas, listas, detalle por pasos, desglose
+  notion.py            # lee la base de datos de tareas de Notion y la convierte en filas (tolera huecos)
+  calculos.py          # reglas: progreso, parado, métricas, listas, detalle por pasos, desglose, tareas
 vistas/
-  bloques.py           # solo dibuja: métricas, filtros, En curso, No empezados, Pausados, Finalizados, Desglose
+  bloques.py           # solo dibuja: métricas, filtros, En curso, No empezados, Pausados, Finalizados, Desglose, Tareas
 tests/
   test_calculos.py     # comprueba las reglas con filas inventadas (bordes de fechas, huecos, etc.)
+  test_tareas.py       # comprueba lectura y agrupación de tareas con páginas de Notion inventadas
 ```
 
 - `datos/` no importa Streamlit; `vistas/` no calcula; `app.py` conecta ambas capas.
