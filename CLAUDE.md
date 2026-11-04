@@ -118,6 +118,8 @@ Pendiente:
 
 Finalizado automático: un ítem con estado En curso en la hoja y progreso 100 % se trata en la app como Finalizado (sale de En curso, no consume el límite WIP, cuenta en métricas y en Últimos finalizados). Si no tiene `fin`, se deduce: `fin` de la hoja, si no el último `fecha_hecho` de sus pasos, si no `ult_act`. La hoja no se modifica. Idea, Pausado y Abandonado siguen siendo manuales.
 
+Reapertura automática: al revés, un ítem Finalizado en la hoja cuyo progreso baja del 100 % (p. ej. porque se le añade un paso nuevo en `Pasos`) se trata como En curso (o No empezado si está al 0 %) y pierde su `fin`, así que deja de contar como terminado. Los ítems Finalizados sin datos de progreso (sin `total` válido ni pasos) se respetan como Finalizados.
+
 ## Tareas de Notion
 
 La app lee también la base de datos de Notion "Tareas asistente" (solo lectura, con una integración interna cuyo token solo tiene acceso a esa base). Columnas: `Tarea` (título), `Estado` (Pendiente, En curso, Hecha), `Fecha límite`, `Prioridad` (Alta, Media, Baja), `Proyecto`, `Notas`, `Fecha realizada`. Secrets en `[notion]`: `token` y `database_id` (fuera de `[connections.gsheets]`, que se pasa entera a la conexión de Sheets). Misma caché de 1 h; el botón "Actualizar" vacía las dos. Si Notion falla, solo sus bloques muestran el error.

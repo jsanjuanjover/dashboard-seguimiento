@@ -243,6 +243,37 @@ def test_finalizado_auto_cuenta_en_metricas_y_ultimos_finalizados():
     assert list(ultimos_finalizados(d)["nombre"]) == ["lleno"]
 
 
+def test_finalizado_que_baja_del_100_vuelve_a_en_curso():
+    p = pasos(
+        ["Dash", "1", "a", 1, "Hecho", "10/09/2026"],
+        ["Dash", "1", "b", 2, "Hecho", "15/09/2026"],
+        ["Dash", "2", "nuevo", 3, "Pendiente", None],
+    )
+    df = items(
+        fila("Dash", tipo="Proyecto", estado="Finalizado", fin="30/09/2026"),
+        fila("libro_a_medias", estado="Finalizado", fin="01/09/2026", actual=0, total=300),
+        fila("sin_datos", estado="Finalizado", fin="01/09/2026"),
+        fila("completo", estado="Finalizado", fin="01/09/2026", actual=300, total=300),
+    )
+    d = enriquecer(df, p, HOY).set_index("nombre")
+    assert d.loc["Dash", "estado"] == "En curso" and d.loc["Dash", "reabierto"]
+    assert pd.isna(d.loc["Dash", "fin"])
+    assert d.loc["libro_a_medias", "estado"] == "En curso"
+    assert d.loc["sin_datos", "estado"] == "Finalizado" and not d.loc["sin_datos", "reabierto"]
+    assert d.loc["completo", "estado"] == "Finalizado"
+    d = d.reset_index()
+    assert list(en_curso(d)["nombre"]) == ["Dash"]
+    assert list(no_empezados(d)["nombre"]) == ["libro_a_medias"]
+    assert set(ultimos_finalizados(d)["nombre"]) == {"completo", "sin_datos"}
+
+
+def test_reabierto_no_cuenta_como_terminado():
+    p = pasos(["Dash", "1", "a", 1, "Hecho", "10/09/2026"], ["Dash", "1", "b", 2, "Pendiente", None])
+    df = items(fila("Dash", tipo="Proyecto", estado="Finalizado", fin="15/09/2026"))
+    m = metricas(enriquecer(df, p, HOY), HOY)
+    assert m["terminados_mes"] == 0 and m["terminados_anio"] == 0 and m["en_curso"] == 1
+
+
 def test_en_progreso_excluye_0_y_100():
     df = items(fila("cero", actual=0, total=10), fila("medio", actual=5, total=10), fila("lleno", actual=10, total=10))
     r = en_progreso(enriquecer(df, SIN_PASOS, HOY))
