@@ -122,12 +122,14 @@ Reapertura automática: al revés, un ítem Finalizado en la hoja cuyo progreso 
 
 ## Tareas de Notion
 
-La app lee también la base de datos de Notion "Tareas asistente" con una integración interna cuyo token solo tiene acceso a esa base (permisos Read content y Update content). Es lo único que la app escribe: la hoja de Google sigue siendo de solo lectura. Columnas: `Tarea` (título), `Estado` (Pendiente, En curso, Hecha), `Fecha límite`, `Prioridad` (Alta, Media, Baja), `Proyecto`, `Notas`, `Fecha realizada`. Secrets en `[notion]`: `token` y `database_id` (fuera de `[connections.gsheets]`, que se pasa entera a la conexión de Sheets). Misma caché de 1 h; el botón "Actualizar" vacía las dos. Si Notion falla, solo sus bloques muestran el error.
+La app lee también la base de datos de Notion "Tareas asistente" con una integración interna cuyo token solo tiene acceso a esa base (permisos Read content, Update content e Insert content). Es lo único que la app escribe: la hoja de Google sigue siendo de solo lectura. Columnas: `Tarea` (título), `Estado` (Pendiente, En curso, Hecha), `Fecha límite`, `Prioridad` (Alta, Media, Baja), `Proyecto`, `Notas`, `Fecha realizada`. Secrets en `[notion]`: `token` y `database_id` (fuera de `[connections.gsheets]`, que se pasa entera a la conexión de Sheets). Misma caché de 1 h; el botón "Actualizar" vacía las dos. Si Notion falla, solo sus bloques muestran el error.
 
 Pestañas:
 - **General:** tareas para hoy (no hechas con fecha hoy o anterior; las que no tienen fecha cuentan como de hoy hasta que se hacen) y bloque En curso de proyectos, sin filtros.
 - **Tareas:** calendario de esta semana y la siguiente (dos filas de lunes a domingo, hoy resaltado). La casilla de hoy recoge también las atrasadas (en rojo) y las que no tienen fecha; los días pasados quedan vacíos. Debajo, las hechas en los últimos 30 días según `Fecha realizada` (si falta, la última edición de la página), con la más reciente primero. Dentro de cada día, por prioridad.
 - **Proyectos:** métricas, filtros y todos los bloques de la v1.
+
+"Nueva Tarea": encima del calendario, en la pestaña Tareas, un formulario para crear una tarea en Notion: texto obligatorio, `Fecha límite` hoy por defecto (admite días futuros, no pasados) y `Proyecto` y `Prioridad` opcionales. Se crea como `Pendiente`; si va bien, se vacía el formulario y aparece en el calendario al momento. Las opciones de Proyecto y Prioridad están fijas en `datos/calculos.py` (`PROYECTOS`, `PRIORIDADES`): si se añade una opción en Notion, hay que añadirla también ahí.
 
 Casillas: cada tarea de "Tareas para hoy" (General) lleva una casilla; al marcarla, la app pone en Notion `Estado = Hecha` y `Fecha realizada = hoy`, vacía la caché de tareas y la tarea pasa a Hechas. En Hechas (Tareas) las casillas salen marcadas y, al desmarcar una, vuelve a `Pendiente` con `Fecha realizada` vacía (sirve para deshacer un toque por error). Si Notion falla al guardar, se muestra un aviso y la casilla vuelve a como estaba.
 

@@ -1,7 +1,7 @@
 import pandas as pd
 import streamlit as st
 
-from datos.calculos import DIAS_HECHAS, DIAS_PARADO, LIMITE_WIP, TIPOS
+from datos.calculos import DIAS_HECHAS, DIAS_PARADO, LIMITE_WIP, PRIORIDADES, PROYECTOS, TIPOS
 
 
 def _fecha(valor):
@@ -179,6 +179,18 @@ def _dia(dia, df, hoy):
         st.markdown(_tarea_en_dia(r, hoy))
 
 
+def inbox(hoy, al_crear):
+    """Formulario para crear una tarea; la fecha es hoy por defecto y no admite días pasados."""
+    with st.form("inbox", border=True):
+        st.subheader("Nueva Tarea")
+        st.text_input("Tarea", key="inbox_tarea", placeholder="Qué hay que hacer")
+        fecha, proyecto, prioridad = st.columns(3)
+        fecha.date_input("Fecha límite", value=hoy, min_value=hoy, format="DD/MM/YYYY", key="inbox_fecha")
+        proyecto.selectbox("Proyecto", PROYECTOS, index=None, placeholder="Sin proyecto", key="inbox_proyecto")
+        prioridad.selectbox("Prioridad", PRIORIDADES, index=None, placeholder="Sin prioridad", key="inbox_prioridad")
+        st.form_submit_button("Añadir tarea", icon=":material/add:", on_click=al_crear)
+
+
 def tareas(calendario, hechas, hoy, al_marcar):
     with st.container(border=True):
         st.subheader("Esta semana y la siguiente")
@@ -195,6 +207,13 @@ def tareas(calendario, hechas, hoy, al_marcar):
 
 def error_marcar(mensaje):
     st.warning(mensaje, icon=":material/sync_problem:")
+
+
+def aviso_inbox(tipo, mensaje):
+    if tipo == "ok":
+        st.success(mensaje, icon=":material/check:")
+    else:
+        st.warning(mensaje, icon=":material/sync_problem:")
 
 
 def error_notion(e):

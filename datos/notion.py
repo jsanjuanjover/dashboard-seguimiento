@@ -41,10 +41,13 @@ def tipar_tareas(paginas):
     return df
 
 
+def _fuente(cliente, database_id):
+    return cliente.databases.retrieve(database_id=database_id)["data_sources"][0]["id"]
+
+
 def leer_tareas(token, database_id):
     cliente = Client(auth=token)
-    fuente = cliente.databases.retrieve(database_id=database_id)["data_sources"][0]["id"]
-    return tipar_tareas(collect_paginated_api(cliente.data_sources.query, data_source_id=fuente))
+    return tipar_tareas(collect_paginated_api(cliente.data_sources.query, data_source_id=_fuente(cliente, database_id)))
 
 
 def propiedades_estado(hecha, hoy):
@@ -56,3 +59,23 @@ def propiedades_estado(hecha, hoy):
 
 def cambiar_estado(token, page_id, hecha, hoy):
     Client(auth=token).pages.update(page_id=page_id, properties=propiedades_estado(hecha, hoy))
+
+
+def propiedades_nueva_tarea(tarea, fecha, proyecto=None, prioridad=None):
+    """Propiedades de una tarea nueva: Pendiente, con fecha límite y, si se dan, proyecto y prioridad."""
+    props = {
+        "Tarea": {"title": [{"text": {"content": tarea.strip()}}]},
+        "Estado": {"status": {"name": "Pendiente"}},
+        "Fecha límite": {"date": {"start": f"{fecha:%Y-%m-%d}"}},
+    }
+    if proyecto:
+        props["Proyecto"] = {"select": {"name": proyecto}}
+    if prioridad:
+        props["Prioridad"] = {"select": {"name": prioridad}}
+    return props
+
+
+def crear_tarea(token, database_id, tarea, fecha, proyecto=None, prioridad=None):
+    cliente = Client(auth=token)
+    cliente.pages.create(parent={"data_source_id": _fuente(cliente, database_id)},
+                         properties=propiedades_nueva_tarea(tarea, fecha, proyecto, prioridad))

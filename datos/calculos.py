@@ -5,7 +5,9 @@ DIAS_PARADO = 21
 ESTADOS = ["Idea", "En curso", "Pausado", "Finalizado", "Abandonado"]
 TIPOS = ["Proyecto", "Curso", "Libro"]
 SIN_ASIGNAR = "(sin asignar)"
+# Opciones de los desplegables de la base de datos de tareas en Notion.
 PRIORIDADES = ["Alta", "Media", "Baja"]
+PROYECTOS = ["TFM", "Docencia", "Empleo", "Personal", "Otros"]
 DIAS_HECHAS = 30
 
 

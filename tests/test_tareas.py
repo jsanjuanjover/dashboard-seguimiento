@@ -4,7 +4,7 @@ from datos.calculos import calendario_tareas, fin_semana_siguiente, tareas_para_
 from streamlit.testing.v1 import AppTest
 
 from datos import notion
-from datos.notion import propiedades_estado, tipar_tareas
+from datos.notion import propiedades_estado, propiedades_nueva_tarea, tipar_tareas
 
 HOY = pd.Timestamp("2026-11-04")  # miércoles
 
@@ -194,3 +194,61 @@ def test_casilla_hecha_al_desmarcarla_avisa_con_hecha_false():
     assert [c.value for c in at.checkbox] == [True]
     at.checkbox(key="tarea_hecha_id-hecha").uncheck().run()
     assert at.session_state["marcadas"] == [("id-hecha", False, "tarea_hecha_id-hecha")]
+
+
+def test_nueva_tarea_pendiente_con_fecha_y_sin_opcionales():
+    assert propiedades_nueva_tarea("  Llamar al banco ", HOY) == {
+        "Tarea": {"title": [{"text": {"content": "Llamar al banco"}}]},
+        "Estado": {"status": {"name": "Pendiente"}},
+        "Fecha límite": {"date": {"start": "2026-11-04"}},
+    }
+
+
+def test_nueva_tarea_con_proyecto_y_prioridad():
+    props = propiedades_nueva_tarea("Revisar", pd.Timestamp("2026-11-20"), "TFM", "Alta")
+    assert props["Fecha límite"] == {"date": {"start": "2026-11-20"}}
+    assert props["Proyecto"] == {"select": {"name": "TFM"}}
+    assert props["Prioridad"] == {"select": {"name": "Alta"}}
+
+
+def test_crear_tarea_la_crea_en_la_fuente_de_datos_de_la_base(monkeypatch):
+    creadas = []
+
+    class ClienteFalso:
+        def __init__(self, auth):
+            self.databases = type("D", (), {"retrieve": lambda _, database_id: {"data_sources": [{"id": "ds-1"}]}})()
+            self.pages = type("P", (), {"create": lambda _, **kw: creadas.append(kw)})()
+
+    monkeypatch.setattr(notion, "Client", ClienteFalso)
+    notion.crear_tarea("tok", "db-1", "Nueva", HOY, proyecto="Otros")
+    assert creadas == [{"parent": {"data_source_id": "ds-1"},
+                        "properties": propiedades_nueva_tarea("Nueva", HOY, "Otros")}]
+
+
+def _vista_inbox(hoy):
+    import streamlit as st
+
+    from vistas import bloques
+
+    def al_crear():
+        estado = st.session_state
+        estado["enviado"] = (estado["inbox_tarea"], estado["inbox_fecha"], estado["inbox_proyecto"],
+                             estado["inbox_prioridad"])
+
+    bloques.inbox(hoy, al_crear)
+
+
+def test_inbox_fecha_hoy_por_defecto_y_sin_dias_pasados():
+    at = AppTest.from_function(_vista_inbox, args=(HOY.date(),)).run()
+    assert at.date_input(key="inbox_fecha").value == HOY.date()
+    assert at.date_input(key="inbox_fecha").min == HOY.date()
+    assert at.selectbox(key="inbox_proyecto").value is None
+
+
+def test_inbox_envia_lo_escrito_con_fecha_futura():
+    at = AppTest.from_function(_vista_inbox, args=(HOY.date(),)).run()
+    at.text_input(key="inbox_tarea").input("Preparar clase")
+    at.date_input(key="inbox_fecha").set_value(pd.Timestamp("2026-11-12").date())
+    at.selectbox(key="inbox_proyecto").select("Docencia")
+    at.button[0].click().run()
+    assert at.session_state["enviado"] == ("Preparar clase", pd.Timestamp("2026-11-12").date(), "Docencia", None)
