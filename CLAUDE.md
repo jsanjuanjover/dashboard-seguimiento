@@ -131,6 +131,8 @@ Pestañas:
 
 "Nueva Tarea": encima del calendario, en la pestaña Tareas, un formulario para crear una tarea en Notion: texto obligatorio, `Fecha límite` hoy por defecto (admite días futuros, no pasados) y `Proyecto` y `Prioridad` opcionales. Se crea como `Pendiente`; si va bien, se vacía el formulario y aparece en el calendario al momento. Las opciones de Proyecto y Prioridad están fijas en `datos/calculos.py` (`PROYECTOS`, `PRIORIDADES`): si se añade una opción en Notion, hay que añadirla también ahí.
 
+Borrar: cada tarea pendiente del calendario (de hoy en adelante) va en su propio recuadro con una cruz roja a la derecha; al pulsarla pide confirmación y envía la tarea a la papelera de Notion (`in_trash`), desde donde se puede recuperar. Usa el permiso Update content.
+
 Casillas: cada tarea de "Tareas para hoy" (General) lleva una casilla; al marcarla, la app pone en Notion `Estado = Hecha` y `Fecha realizada = hoy`, vacía la caché de tareas y la tarea pasa a Hechas. En Hechas (Tareas) las casillas salen marcadas y, al desmarcar una, vuelve a `Pendiente` con `Fecha realizada` vacía (sirve para deshacer un toque por error). Si Notion falla al guardar, se muestra un aviso y la casilla vuelve a como estaba.
 
 ## Estructura del código

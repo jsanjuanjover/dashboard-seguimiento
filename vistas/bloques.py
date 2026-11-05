@@ -170,13 +170,22 @@ def _tarea_en_dia(r, hoy):
     return f"**{r.tarea}**" + (f"  \n:gray[{detalle}]" if detalle else "")
 
 
-def _dia(dia, df, hoy):
+def _borrar(r, al_borrar):
+    """Cruz roja con confirmación, para no borrar con un toque por error."""
+    with st.popover(":red[:material/close:]", type="tertiary", help="Borrar tarea"):
+        st.markdown(f"¿Borrar **{r.tarea}**? Irá a la papelera de Notion.")
+        st.button("Borrar", key=f"borrar_{r.id}", type="primary", on_click=al_borrar, args=(r.id, r.tarea))
+
+
+def _dia(dia, df, hoy, al_borrar):
     titulo = f"{DIAS_SEMANA[dia.weekday()]} {dia:%d/%m}"
     st.markdown(f":blue-background[**{titulo} · hoy**]" if dia == hoy else f"**{titulo}**")
     if dia < hoy:
         return
     for r in df.itertuples():
-        st.markdown(_tarea_en_dia(r, hoy))
+        with st.container(border=True, horizontal=True, wrap=False, vertical_alignment="top", gap="xsmall"):
+            st.markdown(_tarea_en_dia(r, hoy), width="stretch")
+            _borrar(r, al_borrar)
 
 
 def inbox(hoy, al_crear):
@@ -191,14 +200,14 @@ def inbox(hoy, al_crear):
         st.form_submit_button("Añadir tarea", icon=":material/add:", on_click=al_crear)
 
 
-def tareas(calendario, hechas, hoy, al_marcar):
+def tareas(calendario, hechas, hoy, al_marcar, al_borrar):
     with st.container(border=True):
         st.subheader("Esta semana y la siguiente")
         dias = list(calendario.items())
         for semana in (dias[:7], dias[7:]):
             for columna, (dia, df) in zip(st.columns(7, border=True), semana):
                 with columna:
-                    _dia(dia, df, hoy)
+                    _dia(dia, df, hoy, al_borrar)
     with st.container(border=True):
         st.subheader(f"Hechas (últimos {DIAS_HECHAS} días)")
         st.caption("Desmarca una tarea para devolverla a Pendiente.")
@@ -209,7 +218,7 @@ def error_marcar(mensaje):
     st.warning(mensaje, icon=":material/sync_problem:")
 
 
-def aviso_inbox(tipo, mensaje):
+def aviso_tareas(tipo, mensaje):
     if tipo == "ok":
         st.success(mensaje, icon=":material/check:")
     else:

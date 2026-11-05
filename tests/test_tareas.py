@@ -187,7 +187,7 @@ def test_casilla_hecha_al_desmarcarla_avisa_con_hecha_false():
             st.session_state.setdefault("marcadas", []).append((page_id, hecha, clave))
 
         cal = {hoy: tipar_tareas([])}
-        bloques.tareas(cal, tipar_tareas(filas), hoy, al_marcar)
+        bloques.tareas(cal, tipar_tareas(filas), hoy, al_marcar, lambda *a: None)
 
     filas = [pagina("hecha", estado="Hecha", realizada="2026-11-03")]
     at = AppTest.from_function(vista, args=(filas, HOY)).run()
@@ -252,3 +252,39 @@ def test_inbox_envia_lo_escrito_con_fecha_futura():
     at.selectbox(key="inbox_proyecto").select("Docencia")
     at.button[0].click().run()
     assert at.session_state["enviado"] == ("Preparar clase", pd.Timestamp("2026-11-12").date(), "Docencia", None)
+
+
+def test_enviar_a_papelera_marca_la_pagina_in_trash(monkeypatch):
+    llamadas = []
+
+    class ClienteFalso:
+        def __init__(self, auth):
+            self.pages = type("P", (), {"update": lambda _, **kw: llamadas.append(kw)})()
+
+    monkeypatch.setattr(notion, "Client", ClienteFalso)
+    notion.enviar_a_papelera("tok", "id-a")
+    assert llamadas == [{"page_id": "id-a", "in_trash": True}]
+
+
+def _vista_calendario(filas, hoy):
+    import streamlit as st
+
+    from datos import calculos
+    from datos.notion import tipar_tareas
+    from vistas import bloques
+
+    def al_borrar(page_id, tarea):
+        st.session_state.setdefault("borradas", []).append((page_id, tarea))
+
+    t = tipar_tareas(filas)
+    grupos = calculos.tareas_por_grupo(t, hoy)
+    bloques.tareas(calculos.calendario_tareas(grupos, hoy), grupos["Hechas"], hoy, lambda *a: None, al_borrar)
+
+
+def test_papelera_en_cada_tarea_pendiente_del_calendario_y_borra_la_elegida():
+    filas = [pagina("hoy", fecha="2026-11-04"), pagina("futura", fecha="2026-11-12"),
+             pagina("pasada", fecha="2026-11-02", estado="Hecha", realizada="2026-11-02")]
+    at = AppTest.from_function(_vista_calendario, args=(filas, HOY)).run()
+    assert {b.key for b in at.button if b.key and b.key.startswith("borrar_")} == {"borrar_id-hoy", "borrar_id-futura"}
+    at.button(key="borrar_id-futura").click().run()
+    assert at.session_state["borradas"] == [("id-futura", "futura")]

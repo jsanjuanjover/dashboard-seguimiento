@@ -79,3 +79,8 @@ def crear_tarea(token, database_id, tarea, fecha, proyecto=None, prioridad=None)
     cliente = Client(auth=token)
     cliente.pages.create(parent={"data_source_id": _fuente(cliente, database_id)},
                          properties=propiedades_nueva_tarea(tarea, fecha, proyecto, prioridad))
+
+
+def enviar_a_papelera(token, page_id):
+    """Envía la tarea a la papelera de Notion (se puede recuperar desde allí)."""
+    Client(auth=token).pages.update(page_id=page_id, in_trash=True)
