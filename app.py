@@ -4,7 +4,7 @@ from streamlit_gsheets import GSheetsConnection
 
 from datos import calculos
 from datos.carga import leer_hojas
-from datos.notion import cambiar_estado, crear_tarea, leer_tareas
+from datos.notion import cambiar_estado, crear_tarea, enviar_a_papelera, leer_tareas
 from vistas import bloques
 
 st.set_page_config(page_title="Seguimiento", layout="wide")
@@ -44,18 +44,28 @@ def crear_desde_inbox():
     estado = st.session_state
     tarea = (estado.get("inbox_tarea") or "").strip()
     if not tarea:
-        estado["aviso_inbox"] = ("error", "Escribe la tarea antes de añadirla.")
+        estado["aviso_tareas"] = ("error", "Escribe la tarea antes de añadirla.")
         return
     try:
         crear_tarea(st.secrets["notion"]["token"], st.secrets["notion"]["database_id"], tarea,
                     estado["inbox_fecha"], estado.get("inbox_proyecto"), estado.get("inbox_prioridad"))
         cargar_tareas.clear()
     except Exception as e:
-        estado["aviso_inbox"] = ("error", f"No se pudo crear la tarea en Notion: {type(e).__name__}: {e}")
+        estado["aviso_tareas"] = ("error", f"No se pudo crear la tarea en Notion: {type(e).__name__}: {e}")
         return
-    estado["aviso_inbox"] = ("ok", f"Añadida: {tarea} ({estado['inbox_fecha']:%d/%m/%Y})")
+    estado["aviso_tareas"] = ("ok", f"Añadida: {tarea} ({estado['inbox_fecha']:%d/%m/%Y})")
     for clave in ["inbox_tarea", "inbox_fecha", "inbox_proyecto", "inbox_prioridad"]:
         del estado[clave]
+
+
+def borrar_tarea(page_id, tarea):
+    try:
+        enviar_a_papelera(st.secrets["notion"]["token"], page_id)
+        cargar_tareas.clear()
+    except Exception as e:
+        st.session_state["aviso_tareas"] = ("error", f"No se pudo borrar la tarea en Notion: {type(e).__name__}: {e}")
+        return
+    st.session_state["aviso_tareas"] = ("ok", f"Borrada: {tarea} (se puede recuperar desde la papelera de Notion)")
 
 
 def proyectos(df, pasos, hoy):
@@ -115,11 +125,11 @@ def dashboard():
         if error_tareas:
             bloques.error_notion(error_tareas)
         else:
-            if aviso := st.session_state.pop("aviso_inbox", None):
-                bloques.aviso_inbox(*aviso)
+            if aviso := st.session_state.pop("aviso_tareas", None):
+                bloques.aviso_tareas(*aviso)
             bloques.inbox(hoy.date(), crear_desde_inbox)
             grupos = calculos.tareas_por_grupo(tareas, hoy)
-            bloques.tareas(calculos.calendario_tareas(grupos, hoy), grupos["Hechas"], hoy, marcar_tarea)
+            bloques.tareas(calculos.calendario_tareas(grupos, hoy), grupos["Hechas"], hoy, marcar_tarea, borrar_tarea)
     with pestana_proyectos:
         proyectos(df, pasos, hoy)
 
