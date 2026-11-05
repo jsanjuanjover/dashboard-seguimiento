@@ -1,7 +1,10 @@
 import pandas as pd
 
 from datos.calculos import calendario_tareas, fin_semana_siguiente, tareas_para_hoy, tareas_por_grupo
-from datos.notion import tipar_tareas
+from streamlit.testing.v1 import AppTest
+
+from datos import notion
+from datos.notion import propiedades_estado, tipar_tareas
 
 HOY = pd.Timestamp("2026-11-04")  # miércoles
 
@@ -15,6 +18,7 @@ def pagina(tarea="T", estado="Pendiente", fecha=None, prioridad=None, proyecto=N
         return {"type": tipo, tipo: [{"plain_text": valor}] if valor else []}
 
     return {
+        "id": f"id-{tarea}",
         "last_edited_time": f"{editada}T10:00:00.000Z",
         "properties": {
             "Tarea": texto("title", tarea),
@@ -116,3 +120,77 @@ def test_hechas_sin_fecha_realizada_ultimos_30_dias_por_edicion():
         pagina("pendiente", editada="2026-11-03"),
     )
     assert list(tareas_por_grupo(t, HOY)["Hechas"]["tarea"]) == ["reciente", "limite"]
+
+
+def test_tipar_guarda_el_id_de_la_pagina():
+    assert list(tareas(pagina("a"), pagina("b"))["id"]) == ["id-a", "id-b"]
+
+
+def test_marcar_hecha_pone_estado_y_fecha_realizada_de_hoy():
+    assert propiedades_estado(True, HOY) == {
+        "Estado": {"status": {"name": "Hecha"}},
+        "Fecha realizada": {"date": {"start": "2026-11-04"}},
+    }
+
+
+def test_desmarcar_vuelve_a_pendiente_y_borra_fecha_realizada():
+    assert propiedades_estado(False, HOY) == {
+        "Estado": {"status": {"name": "Pendiente"}},
+        "Fecha realizada": {"date": None},
+    }
+
+
+def test_cambiar_estado_actualiza_la_pagina_indicada(monkeypatch):
+    llamadas = []
+
+    class Paginas:
+        def update(self, **kwargs):
+            llamadas.append(kwargs)
+
+    class ClienteFalso:
+        def __init__(self, auth):
+            self.auth, self.pages = auth, Paginas()
+
+    monkeypatch.setattr(notion, "Client", ClienteFalso)
+    notion.cambiar_estado("tok", "id-a", True, HOY)
+    assert llamadas == [{"page_id": "id-a", "properties": propiedades_estado(True, HOY)}]
+
+
+def _vista_casillas(filas, hoy):
+    import streamlit as st
+
+    from datos.notion import tipar_tareas
+    from vistas import bloques
+
+    def al_marcar(page_id, hecha, clave):
+        st.session_state.setdefault("marcadas", []).append((page_id, hecha, clave))
+
+    df = tipar_tareas(filas)
+    bloques.tareas_para_hoy(df[df["estado"].ne("Hecha")], hoy, al_marcar)
+
+
+def test_casilla_pendiente_al_marcarla_avisa_con_hecha_true():
+    at = AppTest.from_function(_vista_casillas, args=([pagina("a"), pagina("b")], HOY)).run()
+    assert [c.value for c in at.checkbox] == [False, False]
+    at.checkbox(key="tarea_pendiente_id-b").check().run()
+    assert at.session_state["marcadas"] == [("id-b", True, "tarea_pendiente_id-b")]
+
+
+def test_casilla_hecha_al_desmarcarla_avisa_con_hecha_false():
+    def vista(filas, hoy):
+        import streamlit as st
+
+        from datos.notion import tipar_tareas
+        from vistas import bloques
+
+        def al_marcar(page_id, hecha, clave):
+            st.session_state.setdefault("marcadas", []).append((page_id, hecha, clave))
+
+        cal = {hoy: tipar_tareas([])}
+        bloques.tareas(cal, tipar_tareas(filas), hoy, al_marcar)
+
+    filas = [pagina("hecha", estado="Hecha", realizada="2026-11-03")]
+    at = AppTest.from_function(vista, args=(filas, HOY)).run()
+    assert [c.value for c in at.checkbox] == [True]
+    at.checkbox(key="tarea_hecha_id-hecha").uncheck().run()
+    assert at.session_state["marcadas"] == [("id-hecha", False, "tarea_hecha_id-hecha")]

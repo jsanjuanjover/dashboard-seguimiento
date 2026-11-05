@@ -141,16 +141,21 @@ def _linea_tarea(r, hoy):
     return "- " + " · ".join(partes)
 
 
-def _lista_tareas(df, hoy, vacio):
+def _casillas_tareas(df, hoy, al_marcar, vacio):
+    """Una casilla por tarea; al tocarla se llama a `al_marcar(id, hecha, clave)`."""
     if df.empty:
         st.caption(vacio)
-    st.markdown("\n".join(_linea_tarea(r, hoy) for r in df.itertuples()))
+    for r in df.itertuples():
+        hecha = r.estado == "Hecha"
+        clave = f"tarea_{'hecha' if hecha else 'pendiente'}_{r.id}"
+        st.checkbox(_linea_tarea(r, hoy).removeprefix("- "), value=hecha, key=clave,
+                    on_change=al_marcar, args=(r.id, not hecha, clave))
 
 
-def tareas_para_hoy(df, hoy):
+def tareas_para_hoy(df, hoy, al_marcar):
     with st.container(border=True):
         st.subheader("Tareas para hoy")
-        _lista_tareas(df, hoy, "Nada pendiente para hoy.")
+        _casillas_tareas(df, hoy, al_marcar, "Nada pendiente para hoy.")
 
 
 DIAS_SEMANA = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"]
@@ -174,7 +179,7 @@ def _dia(dia, df, hoy):
         st.markdown(_tarea_en_dia(r, hoy))
 
 
-def tareas(calendario, hechas, hoy):
+def tareas(calendario, hechas, hoy, al_marcar):
     with st.container(border=True):
         st.subheader("Esta semana y la siguiente")
         dias = list(calendario.items())
@@ -184,7 +189,12 @@ def tareas(calendario, hechas, hoy):
                     _dia(dia, df, hoy)
     with st.container(border=True):
         st.subheader(f"Hechas (últimos {DIAS_HECHAS} días)")
-        _lista_tareas(hechas, hoy, "Ninguna.")
+        st.caption("Desmarca una tarea para devolverla a Pendiente.")
+        _casillas_tareas(hechas, hoy, al_marcar, "Ninguna.")
+
+
+def error_marcar(mensaje):
+    st.warning(mensaje, icon=":material/sync_problem:")
 
 
 def error_notion(e):

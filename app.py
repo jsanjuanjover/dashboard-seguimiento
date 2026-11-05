@@ -4,7 +4,7 @@ from streamlit_gsheets import GSheetsConnection
 
 from datos import calculos
 from datos.carga import leer_hojas
-from datos.notion import leer_tareas
+from datos.notion import cambiar_estado, leer_tareas
 from vistas import bloques
 
 st.set_page_config(page_title="Seguimiento", layout="wide")
@@ -27,6 +27,16 @@ def cargar():
 @st.cache_data(ttl=INTERVALO)
 def cargar_tareas():
     return leer_tareas(st.secrets["notion"]["token"], st.secrets["notion"]["database_id"])
+
+
+def marcar_tarea(page_id, hecha, clave):
+    """Escribe en Notion el cambio de una casilla; si falla, la casilla vuelve a como estaba."""
+    try:
+        cambiar_estado(st.secrets["notion"]["token"], page_id, hecha, ahora().normalize())
+        cargar_tareas.clear()
+    except Exception as e:
+        del st.session_state[clave]
+        st.session_state["error_marcar"] = f"No se pudo guardar el cambio en Notion: {type(e).__name__}: {e}"
 
 
 def proyectos(df, pasos, hoy):
@@ -69,6 +79,9 @@ def dashboard():
     except Exception as e:
         tareas, error_tareas = None, e
 
+    if mensaje := st.session_state.pop("error_marcar", None):
+        bloques.error_marcar(mensaje)
+
     general, pestana_tareas, pestana_proyectos = st.tabs(["General", "Tareas", "Proyectos"])
     with general:
         izquierda, derecha = st.columns([2, 3])
@@ -76,7 +89,7 @@ def dashboard():
             if error_tareas:
                 bloques.error_notion(error_tareas)
             else:
-                bloques.tareas_para_hoy(calculos.tareas_para_hoy(tareas, hoy), hoy)
+                bloques.tareas_para_hoy(calculos.tareas_para_hoy(tareas, hoy), hoy, marcar_tarea)
         with derecha:
             bloques.en_curso(calculos.en_curso(df), {})
     with pestana_tareas:
@@ -84,7 +97,7 @@ def dashboard():
             bloques.error_notion(error_tareas)
         else:
             grupos = calculos.tareas_por_grupo(tareas, hoy)
-            bloques.tareas(calculos.calendario_tareas(grupos, hoy), grupos["Hechas"], hoy)
+            bloques.tareas(calculos.calendario_tareas(grupos, hoy), grupos["Hechas"], hoy, marcar_tarea)
     with pestana_proyectos:
         proyectos(df, pasos, hoy)
 

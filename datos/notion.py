@@ -2,7 +2,7 @@ import pandas as pd
 from notion_client import Client
 from notion_client.helpers import collect_paginated_api
 
-COLUMNAS = ["tarea", "estado", "fecha", "prioridad", "proyecto", "notas", "realizada", "editada"]
+COLUMNAS = ["id", "tarea", "estado", "fecha", "prioridad", "proyecto", "notas", "realizada", "editada"]
 
 
 def _texto(prop):
@@ -25,6 +25,7 @@ def tipar_tareas(paginas):
     for p in paginas:
         props = p["properties"]
         filas.append({
+            "id": p["id"],
             "tarea": _texto(props["Tarea"]),
             "estado": _opcion(props["Estado"]),
             "fecha": _fecha(props["Fecha límite"]),
@@ -44,3 +45,14 @@ def leer_tareas(token, database_id):
     cliente = Client(auth=token)
     fuente = cliente.databases.retrieve(database_id=database_id)["data_sources"][0]["id"]
     return tipar_tareas(collect_paginated_api(cliente.data_sources.query, data_source_id=fuente))
+
+
+def propiedades_estado(hecha, hoy):
+    """Propiedades que se envían a Notion al marcar (Hecha, con fecha de hoy) o desmarcar una tarea."""
+    if hecha:
+        return {"Estado": {"status": {"name": "Hecha"}}, "Fecha realizada": {"date": {"start": f"{hoy:%Y-%m-%d}"}}}
+    return {"Estado": {"status": {"name": "Pendiente"}}, "Fecha realizada": {"date": None}}
+
+
+def cambiar_estado(token, page_id, hecha, hoy):
+    Client(auth=token).pages.update(page_id=page_id, properties=propiedades_estado(hecha, hoy))
