@@ -4,7 +4,7 @@ from streamlit_gsheets import GSheetsConnection
 
 from datos import calculos
 from datos.carga import leer_hojas
-from datos.notion import cambiar_estado, leer_tareas
+from datos.notion import cambiar_estado, crear_tarea, leer_tareas
 from vistas import bloques
 
 st.set_page_config(page_title="Seguimiento", layout="wide")
@@ -37,6 +37,25 @@ def marcar_tarea(page_id, hecha, clave):
     except Exception as e:
         del st.session_state[clave]
         st.session_state["error_marcar"] = f"No se pudo guardar el cambio en Notion: {type(e).__name__}: {e}"
+
+
+def crear_desde_inbox():
+    """Crea en Notion la tarea del formulario del inbox; si va bien, vacía el formulario."""
+    estado = st.session_state
+    tarea = (estado.get("inbox_tarea") or "").strip()
+    if not tarea:
+        estado["aviso_inbox"] = ("error", "Escribe la tarea antes de añadirla.")
+        return
+    try:
+        crear_tarea(st.secrets["notion"]["token"], st.secrets["notion"]["database_id"], tarea,
+                    estado["inbox_fecha"], estado.get("inbox_proyecto"), estado.get("inbox_prioridad"))
+        cargar_tareas.clear()
+    except Exception as e:
+        estado["aviso_inbox"] = ("error", f"No se pudo crear la tarea en Notion: {type(e).__name__}: {e}")
+        return
+    estado["aviso_inbox"] = ("ok", f"Añadida: {tarea} ({estado['inbox_fecha']:%d/%m/%Y})")
+    for clave in ["inbox_tarea", "inbox_fecha", "inbox_proyecto", "inbox_prioridad"]:
+        del estado[clave]
 
 
 def proyectos(df, pasos, hoy):
@@ -96,6 +115,9 @@ def dashboard():
         if error_tareas:
             bloques.error_notion(error_tareas)
         else:
+            if aviso := st.session_state.pop("aviso_inbox", None):
+                bloques.aviso_inbox(*aviso)
+            bloques.inbox(hoy.date(), crear_desde_inbox)
             grupos = calculos.tareas_por_grupo(tareas, hoy)
             bloques.tareas(calculos.calendario_tareas(grupos, hoy), grupos["Hechas"], hoy, marcar_tarea)
     with pestana_proyectos:
